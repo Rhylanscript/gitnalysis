@@ -1,5 +1,7 @@
 import { getCached, setCached } from "./cache";
 import { fetchContributions } from "./github/graphql";
+import { fetchRepoLanguages, fetchUserRepos } from "./github/rest";
+import { aggregateLanguages } from "./stats/languages";
 import { Period, periodToRange } from "./stats/period";
 import { calculateStreaks } from "./stats/streaks";
 import { Env } from "./types";
@@ -63,6 +65,58 @@ export default {
                 const contributions = await fetchContributions(username, from, to, env);
                 const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
                 const result = { ...contributions, ...streaks };
+
+                await setCached(env, cacheKey, result);
+
+                return new Response(JSON.stringify(result), {
+                    headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
+                });
+            } catch (err) {
+                return new Response(JSON.stringify({ error: String(err) }), {
+                    status: 502,
+                    headers: { "Content-Type": "application/json" },
+                });
+            }
+        }
+
+        if (url.pathname === "/api/languages") {
+            const username = url.searchParams.get("username");
+
+            if (!username) {
+                return new Response(JSON.stringify({ error: "username required" }), {
+                    status: 400,
+                    headers: { "Content-Type": "application/json" },
+                });
+            }
+
+            const cacheKey = `languages:${username}`;
+            const cached = await getCached<any>(env, cacheKey);
+            if (cached) {
+                return new Response(JSON.stringify(cached), {
+                    headers: { "Content-Type": "application/json", "X-Cache": "HIT" },
+                });
+            }
+
+            try {
+                const MAX_REPOS_FOR_LANGUAGES = 30;
+
+                const repos = await fetchUserRepos(username, env);
+                const limitedRepos = repos.filter((r) => !r.fork).slice(0, MAX_REPOS_FOR_LANGUAGES);
+
+                const repoLanguages = await Promise.all(
+                    limitedRepos.map(async (repo) => ({
+                        repo: repo.name,
+                        languages: await fetchRepoLanguages(repo.full_name, env),
+                    }))
+                );
+
+                const stats = aggregateLanguages(repoLanguages);
+                const result = {
+                    ...stats,
+                    estimate: true,
+                    reposAnalysed: limitedRepos.length,
+                    totalRepos: repos.length,
+                };
 
                 await setCached(env, cacheKey, result);
 
