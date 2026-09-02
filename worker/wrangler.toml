@@ -3,4 +3,6 @@ main = "src/index.ts"
 compatibility_date = "2026-09-01"
 
 [vars]
-# nonsecrets here later if needed
+[[kv_namespaces]]
+binding = "STATS_CACHE"
+id = "73d9176e2ac24f2ca06b1cf9173b0546"
