@@ -1,3 +1,4 @@
+import { getCached, setCached } from "./cache";
 import { fetchContributions } from "./github/graphql";
 import { Period, periodToRange } from "./stats/period";
 import { calculateStreaks } from "./stats/streaks";
@@ -48,14 +49,25 @@ export default {
                 });
             }
 
+            const cacheKey = `${username}:${period}`;
+            const cached = await getCached<any>(env, cacheKey);
+            if (cached) {
+                return new Response(JSON.stringify(cached), {
+                    headers: { "Content-Type": "application/json", "X-Cache": "HIT" },
+                });
+            }
+
             const { from, to } = periodToRange(period);
 
             try {
                 const contributions = await fetchContributions(username, from, to, env);
                 const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
+                const result = { ...contributions, ...streaks };
 
-                return new Response(JSON.stringify({ ...contributions, ...streaks }), {
-                    headers: { "Content-Type": "application/json" },
+                await setCached(env, cacheKey, result);
+
+                return new Response(JSON.stringify(result), {
+                    headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
                 });
             } catch (err) {
                 return new Response(JSON.stringify({ error: String(err) }), {
