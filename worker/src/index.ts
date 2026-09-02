@@ -1,5 +1,6 @@
 import { fetchContributions } from "./github/graphql";
 import { Period, periodToRange } from "./stats/period";
+import { calculateStreaks } from "./stats/streaks";
 import { Env } from "./types";
 
 export default {
@@ -51,7 +52,9 @@ export default {
 
             try {
                 const contributions = await fetchContributions(username, from, to, env);
-                return new Response(JSON.stringify(contributions), {
+                const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
+
+                return new Response(JSON.stringify({ ...contributions, ...streaks }), {
                     headers: { "Content-Type": "application/json" },
                 });
             } catch (err) {
