@@ -1,6 +1,6 @@
-export interface Env {
-    GITHUB_TOKEN: string;
-}
+import { fetchContributions } from "./github/graphql";
+import { Period, periodToRange } from "./stats/period";
+import { Env } from "./types";
 
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
@@ -34,6 +34,32 @@ export default {
             return new Response(JSON.stringify(data), {
                 headers: { "Content-Type": "application/json" },
             });
+        }
+
+        if (url.pathname === "/api/stats") {
+            const username = url.searchParams.get("username");
+            const period = (url.searchParams.get("period") ?? "30d") as Period;
+
+            if (!username) {
+                return new Response(JSON.stringify({ error: "username required" }), {
+                    status: 400,
+                    headers: { "Content-Type": "application/json" },
+                });
+            }
+
+            const { from, to } = periodToRange(period);
+
+            try {
+                const contributions = await fetchContributions(username, from, to, env);
+                return new Response(JSON.stringify(contributions), {
+                    headers: { "Content-Type": "application/json" },
+                });
+            } catch (err) {
+                return new Response(JSON.stringify({ error: String(err) }), {
+                    status: 502,
+                    headers: { "Content-Type": "application/json" },
+                });
+            }
         }
 
         return new Response("Not found", { status: 404 });
