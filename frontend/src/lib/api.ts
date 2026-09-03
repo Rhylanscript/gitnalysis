@@ -101,3 +101,11 @@ export const api = {
             }`
         ),
 };
+
+export const PERIODS: { value: Period; label: string }[] = [
+    { value: "7d", label: "7 Days" },
+    { value: "30d", label: "30 Days" },
+    { value: "3mo", label: "3 Months" },
+    { value: "6mo", label: "6 Months" },
+    { value: "1yr", label: "1 Year" },
+];
