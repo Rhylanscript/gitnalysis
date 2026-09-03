@@ -5,6 +5,7 @@ import { useState } from "react";
 import PeriodSelector from "../components/PeriodSelector";
 import StatCard from "../components/StatCard";
 import PublicDataNote from "../components/PublicDataNote";
+import ActivityGraph from "../components/ActivityGraph";
 
 export default function Dashboard() {
     const { username } = useParams<{ username: string }>();
@@ -60,13 +61,14 @@ export default function Dashboard() {
                 <>
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
                         <StatCard label="Commits" value={stats.totalCommitContributions} />
-                        <StatCard label="PRs" value={stats.totalPullRequestContributions} />
+                        <StatCard label="Pull Requests" value={stats.totalPullRequestContributions} />
                         <StatCard label="Issues" value={stats.totalIssueContributions} />
                         <StatCard label="Reviews" value={stats.totalPullRequestReviewContributions} />
                         <StatCard label="Repos" value={stats.totalRepositoriesWithContributedCommits} />
                         <StatCard label="Current streak" value={stats.currentStreak} />
                     </div>
                     <PublicDataNote restrictedCount={stats.restrictedContributionsCount} />
+                    <ActivityGraph weeks={stats.contributionCalendar.weeks} />
                 </>
             )}
         </div>
