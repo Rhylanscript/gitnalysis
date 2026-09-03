@@ -24,3 +24,37 @@ export function periodToRange(period: Period): { from: string; to: string } {
 
     return { from: from.toISOString(), to: to.toISOString() };
 }
+
+export function lastWeekRange(): { from: string, to: string } {
+    const now = new Date();
+    const dayOfWeek = now.getUTCDay(); // where 0 = sunday ... 6 = saturday
+    const daysSinceSaturday = (dayOfWeek - 6 + 7) % 7;  // tuff is calling
+
+    const thisSaturday = new Date(
+        Date.UTC(
+            now.getUTCFullYear(), 
+            now.getUTCMonth(), 
+            now.getUTCDate() - daysSinceSaturday
+        )
+    );
+    const lastSaturday = new Date(thisSaturday);
+    lastSaturday.setUTCDate(thisSaturday.getUTCDate() - 7);
+    const dayBeforeThisSaturday = new Date(thisSaturday.getTime() - 1); // eo last friyay
+
+    return { from: lastSaturday.toISOString(), to: dayBeforeThisSaturday.toISOString() };
+}
+
+export function lastMonthRange(): { from: string; to: string } {
+    const now = new Date();
+    const firstOfThisMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const firstOfLastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+    const lastOfLastMonth  = new Date(firstOfThisMonth.getTime() - 1);
+
+    return { from: firstOfLastMonth.toISOString(), to: lastOfLastMonth.toISOString() };
+}
+
+export function yearRange(year: number): { from: string; to: string } {
+    const from = new Date(Date.UTC(year, 0, 1)).toISOString();
+    const to = new Date(Date.UTC(year, 11, 31, 23, 59, 59)).toISOString();
+    return { from: from, to: to };
+}
