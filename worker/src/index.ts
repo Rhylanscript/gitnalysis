@@ -78,7 +78,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
                 contributions.contributionCalendar.weeks,
                 contributions.commitContributionsByRepository,
             );
-            const result = { ...contributions, ...streaks, ...records };
+            const result = { ...contributions, ...streaks, records };
 
             await setCached(env, cacheKey, result);
 
