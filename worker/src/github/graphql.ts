@@ -19,6 +19,14 @@ const CONTRIBUTIONS_QUERY = `
                         }
                     }
                 }
+                commitContributionsByRepository(maxRepositories: 25) {
+                    repository {
+                        name
+                    }
+                    contributions {
+                        totalCount
+                    }
+                }
             }
         }
     }
