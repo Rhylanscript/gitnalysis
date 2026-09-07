@@ -1,0 +1,71 @@
+import { useState } from "react";
+import type { GitHubUser, Achievement } from "../lib/api";
+import AchievementBadge from "./AchievementBadge";
+
+interface Props {
+    user: GitHubUser;
+    achievements?: Achievement[];
+}
+
+export default function Sidebar({ user, achievements }: Props) {
+    const [showLocked, setShowLocked] = useState(false);
+
+    const unlocked = achievements?.filter((a) => a.unlocked) ?? [];
+    const locked = achievements?.filter((a) => !a.unlocked) ?? [];
+
+    return (
+        <aside className="flex w-full flex-col gap-6 lg:w-72 lg:shrink-0">
+            <div>
+                <img src={user.avatar_url} alt={user.login} className="h-24 w-24 rounded-full" />
+                <h1 className="mt-3 text-xl font-bold text-neutral-100">{user.name ?? user.login}</h1>
+                <p className="text-neutral-400">@{user.login}</p>
+                {user.bio && <p className="mt-2 text-sm text-neutral-400">{user.bio}</p>}
+                <div className="mt-3 flex gap-4 text-sm text-neutral-500">
+                    <span>
+                        <span className="font-medium text-neutral-300">{user.followers}</span> followers
+                    </span>
+                    <span>
+                        <span className="font-medium text-neutral-300">{user.public_repos}</span> repos
+                    </span>
+                </div>
+            </div>
+
+            {achievements && (
+                <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+                    <h2 className="mb-3 text-sm font-medium text-neutral-400">
+                        Achievements · {unlocked.length}/{achievements.length}
+                    </h2>
+
+                    {unlocked.length > 0 ? (
+                        <div className="flex flex-col gap-1">
+                            {unlocked.map((a) => (
+                                <AchievementBadge key={a.id} {...a} />
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-xs text-neutral-500">No achievements unlocked yet.</p>
+                    )}
+
+                    {locked.length > 0 && (
+                        <>
+                            <button
+                                onClick={() => setShowLocked((prev) => !prev)}
+                                className="mt-3 w-full text-left text-xs font-medium text-neutral-500 hover:text-neutral-300"
+                            >
+                                {showLocked ? "Hide" : "Show"} {locked.length} locked
+                            </button>
+
+                            {showLocked && (
+                                <div className="mt-2 flex flex-col gap-1 border-t border-neutral-800 pt-2">
+                                    {locked.map((a) => (
+                                        <AchievementBadge key={a.id} {...a} />
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            )}
+        </aside>
+    );
+}

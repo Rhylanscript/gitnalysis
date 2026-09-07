@@ -79,8 +79,8 @@ export function calculateAchievements(input: AchievementInput): Achievement[] {
             unlocked: input.longestStreak >= THRESHOLDS.marathon,
         },
         {
-            id: "juggernaught",
-            name: "Juggernaught",
+            id: "juggernaut",
+            name: "Juggernaut",
             description: `Maintained a ${THRESHOLDS.juggernaut}+ day contribution streak`,
             unlocked: input.longestStreak >= THRESHOLDS.juggernaut,
         },
