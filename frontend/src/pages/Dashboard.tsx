@@ -26,8 +26,8 @@ export default function Dashboard() {
     })
 
     const { data: languageStats } = useQuery({
-        queryKey: ["languages", username],
-        queryFn: () => api.getLanguages(username!),
+        queryKey: ["languages", username, period],
+        queryFn: () => api.getLanguages(username!, period),
         enabled: !!username,
     });
 
@@ -88,6 +88,7 @@ export default function Dashboard() {
                         languages={languageStats.languages}
                         reposAnalysed={languageStats.reposAnalysed}
                         totalRepos={languageStats.totalRepos}
+                        period={period}
                     />
                 </div>
             )}
