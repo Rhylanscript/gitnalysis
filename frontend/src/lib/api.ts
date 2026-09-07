@@ -49,6 +49,12 @@ export interface Stats {
     };
     currentStreak: number;
     longestStreak: number;
+    records: {
+        mostCommitsInADay: { date: string; count: number } | null;
+        mostCommitsInAWeek: { weekStart: string; count: number } | null;
+        mostActiveMonth: { month: string; count: number } | null;
+        mostActiveRepo: { name: string; count: number } | null;
+    };
 }
 
 export interface LanguageStats {
