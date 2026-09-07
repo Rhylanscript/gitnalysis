@@ -63,6 +63,7 @@ export interface LanguageStats {
     reposAnalysed: number;
     totalRepos: number;
     estimate: true;
+    period: Period | "all";
 }
 
 export interface Achievement {
@@ -92,8 +93,10 @@ export const api = {
             `/api/stats?username=${encodeURIComponent(username)}&period=${period}`
         ),
 
-    getLanguages: (username: string) =>
-        apiFetch<LanguageStats>(`/api/languages?username=${encodeURIComponent(username)}`),
+    getLanguages: (username: string, period?: Period) =>
+        apiFetch<LanguageStats>(
+            `/api/languages?username=${encodeURIComponent(username)}${period ? `&period=${period}` : ""}`
+        ),
 
     getAchievements: (username: string) =>
         apiFetch<AchievementsResult>(

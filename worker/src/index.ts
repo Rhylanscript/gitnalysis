@@ -95,6 +95,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
     if (url.pathname === "/api/languages") {
         const username = url.searchParams.get("username");
+        const periodParam = url.searchParams.get("period") as Period | null;
 
         if (!username) {
             return new Response(JSON.stringify({ error: "username required" }), {
@@ -103,7 +104,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             });
         }
 
-        const cacheKey = `languages:${username}`;
+        const cacheKey = `languages:${username}:${periodParam ?? "all"}`;
         const cached = await getCached<any>(env, cacheKey);
         if (cached) {
             return new Response(JSON.stringify(cached), {
@@ -112,8 +113,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         }
 
         try {
-            const stats = await getLanguageStats(username, env);
-            const result = { ...stats, estimate: true };
+            const stats = await getLanguageStats(username, env, periodParam ?? undefined);
+            const result = { ...stats, estimate: true, period: periodParam ?? "all" };
 
             await setCached(env, cacheKey, result);
             return new Response(JSON.stringify(result), {
