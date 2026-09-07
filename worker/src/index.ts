@@ -213,7 +213,11 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             const { from, to } = getRecapRange(type, year);
             const contributions = await fetchContributions(username, from, to, env);
             const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
-            const result = { ...contributions, ...streaks, recapType: type, from, to };
+            const records = calculateRecords(
+                contributions.contributionCalendar.weeks,
+                contributions.commitContributionsByRepository
+            );
+            const result = { ...contributions, ...streaks, records, recapType: type, from, to };
 
             await setCached(env, cacheKey, result);
             return new Response(JSON.stringify(result), {
