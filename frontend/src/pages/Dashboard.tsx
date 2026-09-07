@@ -8,6 +8,7 @@ import PublicDataNote from "../components/PublicDataNote";
 import ActivityGraph from "../components/ActivityGraph";
 import PersonalRecords from "../components/PersonalRecords";
 import LanguageChart from "../components/LanguageChart";
+import Sidebar from "../components/Sidebar";
 
 export default function Dashboard() {
     const { username } = useParams<{ username: string }>();
@@ -17,17 +18,23 @@ export default function Dashboard() {
         queryKey: ["user", username],
         queryFn: () => api.getUser(username!),
         enabled: !!username,
-    })
+    });
 
     const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
         queryKey: ["stats", username, period],
         queryFn: () => api.getStats(username!, period),
         enabled: !!username,
-    })
+    });
 
     const { data: languageStats } = useQuery({
         queryKey: ["languages", username, period],
         queryFn: () => api.getLanguages(username!, period),
+        enabled: !!username,
+    });
+
+    const { data: achievementsData } = useQuery({
+        queryKey: ["achievements", username],
+        queryFn: () => api.getAchievements(username!),
         enabled: !!username,
     });
 
@@ -50,46 +57,46 @@ export default function Dashboard() {
     return (
         <div className="min-h-screen bg-neutral-950 p-8 text-neutral-100">
             {user && (
-                <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <img src={user.avatar_url} alt={user.login} className="h-16 w-16 rounded-full" />
-                        <div>
-                            <h1 className="text-2xl font-bold">{user.name ?? user.login}</h1>
-                            <p className="text-neutral-400">@{user.login}</p>
+                <div className="flex flex-col gap-6 lg:flex-row">
+                    <Sidebar user={user} achievements={achievementsData?.achievements} />
+
+                    <div className="min-w-0 flex-1">
+                        <div className="mb-6 flex justify-end">
+                            <PeriodSelector value={period} onChange={setPeriod} />
                         </div>
-                    </div>
-                    <PeriodSelector value={period} onChange={setPeriod} />
-                </div>
-            )}
 
-            {statsLoading && <p className="text-neutral-400">Loading stats...</p>}
-            {statsError && <p className="text-red-400">{statsError.message}</p>}
+                        {statsLoading && <p className="text-neutral-400">Loading stats...</p>}
+                        {statsError && <p className="text-red-400">{statsError.message}</p>}
 
-            {stats && (
-                <>
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-                        <StatCard label="Commits" value={stats.totalCommitContributions} />
-                        <StatCard label="Pull Requests" value={stats.totalPullRequestContributions} />
-                        <StatCard label="Issues" value={stats.totalIssueContributions} />
-                        <StatCard label="Reviews" value={stats.totalPullRequestReviewContributions} />
-                        <StatCard label="Repos" value={stats.totalRepositoriesWithContributedCommits} />
-                        <StatCard label="Current streak" value={stats.currentStreak} />
+                        {stats && (
+                            <>
+                                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                                    <StatCard label="Commits" value={stats.totalCommitContributions} />
+                                    <StatCard label="Pull Requests" value={stats.totalPullRequestContributions} />
+                                    <StatCard label="Issues" value={stats.totalIssueContributions} />
+                                    <StatCard label="Reviews" value={stats.totalPullRequestReviewContributions} />
+                                    <StatCard label="Repos" value={stats.totalRepositoriesWithContributedCommits} />
+                                    <StatCard label="Current streak" value={stats.currentStreak} />
+                                </div>
+                                <PublicDataNote restrictedCount={stats.restrictedContributionsCount} />
+                                <ActivityGraph weeks={stats.contributionCalendar.weeks} />
+                                <div className="mt-4">
+                                    <PersonalRecords records={stats.records} period={period} />
+                                </div>
+                            </>
+                        )}
+
+                        {languageStats && (
+                            <div className="mt-4">
+                                <LanguageChart
+                                    languages={languageStats.languages}
+                                    reposAnalysed={languageStats.reposAnalysed}
+                                    totalRepos={languageStats.totalRepos}
+                                    period={period}
+                                />
+                            </div>
+                        )}
                     </div>
-                    <PublicDataNote restrictedCount={stats.restrictedContributionsCount} />
-                    <ActivityGraph weeks={stats.contributionCalendar.weeks} />
-                    <div className="mt-4">
-                        <PersonalRecords records={stats.records} period={period} />
-                    </div>
-                </>
-            )}
-            {languageStats && (
-                <div className="mt-4">
-                    <LanguageChart
-                        languages={languageStats.languages}
-                        reposAnalysed={languageStats.reposAnalysed}
-                        totalRepos={languageStats.totalRepos}
-                        period={period}
-                    />
                 </div>
             )}
         </div>
