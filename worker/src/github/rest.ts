@@ -4,6 +4,7 @@ interface Repo {
     name: string;
     full_name: string;
     fork: boolean;
+    pushed_at: string;
 }
 
 export async function fetchUserRepos(username: string, env: Env): Promise<Repo[]> {
