@@ -81,7 +81,7 @@ export default function Dashboard() {
                                 <PublicDataNote restrictedCount={stats.restrictedContributionsCount} />
                                 <ActivityGraph weeks={stats.contributionCalendar.weeks} />
                                 <div className="mt-4">
-                                    <PersonalRecords records={stats.records} period={period} />
+                                    <PersonalRecords records={stats.records} showMonth={period === "6mo" || period === "1yr" || period === "3mo"} />
                                 </div>
                             </>
                         )}

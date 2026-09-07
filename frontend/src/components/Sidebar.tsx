@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { GitHubUser, Achievement } from "../lib/api";
 import AchievementBadge from "./AchievementBadge";
+import { Link } from "react-router-dom";
 
 interface Props {
     user: GitHubUser;
@@ -66,6 +67,24 @@ export default function Sidebar({ user, achievements }: Props) {
                     )}
                 </div>
             )}
+
+            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+                <h2 className="mb-3 text-sm font-medium text-neutral-400">Recaps</h2>
+                <div className="flex flex-col gap-1 text-sm">
+                    <Link to={`/${user.login}/recap/week`} className="text-neutral-300 hover:text-neutral-100">
+                        Week recap
+                    </Link>
+                    <Link to={`/${user.login}/recap/month`} className="text-neutral-300 hover:text-neutral-100">
+                        Month recap
+                    </Link>
+                    <Link
+                        to={`/${user.login}/recap/year/${new Date().getFullYear() - 1}`}
+                        className="text-neutral-300 hover:text-neutral-100"
+                    >
+                        Year recap
+                    </Link>
+                </div>
+            </div>
         </aside>
     );
 }
