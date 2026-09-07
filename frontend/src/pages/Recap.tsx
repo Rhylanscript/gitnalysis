@@ -107,6 +107,7 @@ export default function Recap() {
                                 issues={data.totalIssueContributions}
                                 reviews={data.totalPullRequestReviewContributions}
                                 repos={data.totalRepositoriesWithContributedCommits}
+                                reposCreated={data.totalRepositoryContributions}
                             />
                         </div>
 

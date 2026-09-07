@@ -42,6 +42,7 @@ export interface Stats {
     totalPullRequestContributions: number;
     totalPullRequestReviewContributions: number;
     totalRepositoriesWithContributedCommits: number;
+    totalRepositoryContributions: number;
     restrictedContributionsCount: number;
     contributionCalendar: {
         totalContributions: number;

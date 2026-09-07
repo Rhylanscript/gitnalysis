@@ -27,6 +27,7 @@ const CONTRIBUTIONS_QUERY = `
                         totalCount
                     }
                 }
+                totalRepositoryContributions
             }
         }
     }
