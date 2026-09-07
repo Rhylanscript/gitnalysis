@@ -7,6 +7,7 @@ import StatCard from "../components/StatCard";
 import PublicDataNote from "../components/PublicDataNote";
 import ActivityGraph from "../components/ActivityGraph";
 import PersonalRecords from "../components/PersonalRecords";
+import LanguageChart from "../components/LanguageChart";
 
 export default function Dashboard() {
     const { username } = useParams<{ username: string }>();
@@ -23,6 +24,12 @@ export default function Dashboard() {
         queryFn: () => api.getStats(username!, period),
         enabled: !!username,
     })
+
+    const { data: languageStats } = useQuery({
+        queryKey: ["languages", username],
+        queryFn: () => api.getLanguages(username!),
+        enabled: !!username,
+    });
 
     if (userLoading) {
         return (
@@ -74,6 +81,15 @@ export default function Dashboard() {
                         <PersonalRecords records={stats.records} period={period} />
                     </div>
                 </>
+            )}
+            {languageStats && (
+                <div className="mt-4">
+                    <LanguageChart
+                        languages={languageStats.languages}
+                        reposAnalysed={languageStats.reposAnalysed}
+                        totalRepos={languageStats.totalRepos}
+                    />
+                </div>
             )}
         </div>
     );
