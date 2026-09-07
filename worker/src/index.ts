@@ -4,6 +4,7 @@ import { calculateAchievements } from "./stats/achievements";
 import { getLanguageStats } from "./stats/getLanguageStats";
 import { Period, periodToRange } from "./stats/period";
 import { getRecapRange, RecapType } from "./stats/recap";
+import { calculateRecords } from "./stats/records";
 import { calculateStreaks } from "./stats/streaks";
 import { Env } from "./types";
 
@@ -73,7 +74,11 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         try {
             const contributions = await fetchContributions(username, from, to, env);
             const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
-            const result = { ...contributions, ...streaks };
+            const records = calculateRecords(
+                contributions.contributionCalendar.weeks,
+                contributions.commitContributionsByRepository,
+            );
+            const result = { ...contributions, ...streaks, records };
 
             await setCached(env, cacheKey, result);
 

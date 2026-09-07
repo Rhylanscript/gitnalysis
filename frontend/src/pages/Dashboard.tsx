@@ -6,6 +6,7 @@ import PeriodSelector from "../components/PeriodSelector";
 import StatCard from "../components/StatCard";
 import PublicDataNote from "../components/PublicDataNote";
 import ActivityGraph from "../components/ActivityGraph";
+import PersonalRecords from "../components/PersonalRecords";
 
 export default function Dashboard() {
     const { username } = useParams<{ username: string }>();
@@ -69,6 +70,9 @@ export default function Dashboard() {
                     </div>
                     <PublicDataNote restrictedCount={stats.restrictedContributionsCount} />
                     <ActivityGraph weeks={stats.contributionCalendar.weeks} />
+                    <div className="mt-4">
+                        <PersonalRecords records={stats.records} period={period} />
+                    </div>
                 </>
             )}
         </div>
