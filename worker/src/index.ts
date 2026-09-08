@@ -3,7 +3,7 @@ import { fetchContributedNotOwnedCount, fetchContributions } from "./github/grap
 import { calculateAchievements } from "./stats/achievements";
 import { getLanguageStats } from "./stats/getLanguageStats";
 import { Period, periodToRange } from "./stats/period";
-import { getRecapRange, RecapType } from "./stats/recap";
+import { getPreviousRecapRange, getRecapRange, RecapType } from "./stats/recap";
 import { calculateRecords } from "./stats/records";
 import { calculateStreaks } from "./stats/streaks";
 import { Env } from "./types";
@@ -212,8 +212,11 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
         try {
             const { from, to } = getRecapRange(type, year);
-            const [contributions, languageStats] = await Promise.all([
+            const { from: prevFrom, to: prevTo } = getPreviousRecapRange(type, year);
+
+            const [contributions, previousContributions, languageStats] = await Promise.all([
                 fetchContributions(username, from, to, env),
+                fetchContributions(username, prevFrom, prevTo, env),
                 getLanguageStats(username, env, from),
             ]);
             const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
@@ -221,11 +224,22 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
                 contributions.contributionCalendar.weeks,
                 contributions.commitContributionsByRepository
             );
+
+            const previous = {
+                totalCommitContributions: previousContributions.totalCommitContributions,
+                totalPullRequestContributions: previousContributions.totalPullRequestContributions,
+                totalIssueContributions: previousContributions.totalIssueContributions,
+                totalPullRequestReviewContributions: previousContributions.totalPullRequestReviewContributions,
+                totalRepositoriesWithContributedCommits: previousContributions.totalRepositoriesWithContributedCommits,
+                totalRepositoryContributions: previousContributions.totalRepositoryContributions,
+            }
+
             const result = {
                 ...contributions, 
                 ...streaks, 
                 records, 
                 languages: languageStats.languages,
+                previous,
                 recapType: type, 
                 from, 
                 to 

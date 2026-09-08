@@ -81,11 +81,21 @@ export interface AchievementsResult {
     basedOnPeriod: "1yr";
 }
 
+export interface RecapComparisonMetrics {
+    totalCommitContributions: number;
+    totalPullRequestContributions: number;
+    totalIssueContributions: number;
+    totalPullRequestReviewContributions: number;
+    totalRepositoriesWithContributedCommits: number;
+    totalRepositoryContributions: number;
+}
+
 export interface Recap extends Stats {
     recapType: RecapType;
     from: string;
     to: string;
     languages: { name: string; bytes: number; percentage: number }[];
+    previous: RecapComparisonMetrics;
 }
 
 export const api = {

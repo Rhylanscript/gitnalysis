@@ -109,6 +109,14 @@ export default function Recap() {
                                 reviews={data.totalPullRequestReviewContributions}
                                 repos={data.totalRepositoriesWithContributedCommits}
                                 reposCreated={data.totalRepositoryContributions}
+                                previous={{
+                                    commits: data.previous.totalCommitContributions,
+                                    prs: data.previous.totalPullRequestContributions,
+                                    issues: data.previous.totalIssueContributions,
+                                    reviews: data.previous.totalPullRequestReviewContributions,
+                                    repos: data.previous.totalRepositoriesWithContributedCommits,
+                                    reposCreated: data.previous.totalRepositoryContributions,
+                                }}
                             />
                         </div>
 
