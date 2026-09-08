@@ -5,6 +5,7 @@ import ActivityRadar from "../components/ActivityRadar";
 import PersonalRecords from "../components/PersonalRecords";
 import LanguageChart from "../components/LanguageChart";
 import PublicDataNote from "../components/PublicDataNote";
+import { ActivityRadarSkeleton, LanguageChartSkeleton, PersonalRecordsSkeleton, RecapGridSkeleton, RecapHeroSkeleton } from "../components/Skeletons";
 import { useEffect } from "react";
 
 const TABS: { type: RecapType; label: string }[] = [
@@ -87,8 +88,19 @@ export default function Recap() {
                     </div>
                 )}
 
-                {isLoading && <p className="text-neutral-400">Loading recap...</p>}
                 {error && <p className="text-red-400">{error.message}</p>}
+
+                {isLoading && (
+                    <>
+                        <RecapHeroSkeleton />
+                        <ActivityRadarSkeleton />
+                        <RecapGridSkeleton />
+                        <div className="mb-8">
+                            <LanguageChartSkeleton />
+                        </div>
+                        <PersonalRecordsSkeleton />
+                    </>
+                )}
 
                 {data && data.contributionCalendar.totalContributions === 0 && (
                     <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-8 text-center text-neutral-500">
@@ -97,7 +109,7 @@ export default function Recap() {
                 )}
 
                 {data && data.contributionCalendar.totalContributions > 0 && (
-                    <>
+                    <div className="fade-up">
                         <div className="mb-8">
                             <div className="text-sm text-neutral-500">
                                 {formatRangeLabel(recapType, data.from, data.to, parsedYear)}
@@ -174,7 +186,7 @@ export default function Recap() {
                             showWeek={recapType !== "week"}
                             showMonth={recapType === "year"} 
                         />
-                    </>
+                    </div>
                 )}
             </div>
         </div>
