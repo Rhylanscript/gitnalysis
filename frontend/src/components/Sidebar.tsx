@@ -100,10 +100,31 @@ export default function Sidebar({ user, achievements }: Props) {
 
             {showAllModal && achievements && (
                 <Modal title="All achievements" onClose={() => setShowAllModal(false)}>
-                    <div className="flex flex-col gap-1">
-                        {achievements.map((a) => (
-                            <AchievementBadge key={a.id} {...a} />
-                        ))}
+                    <div className="flex flex-col gap-4">
+                        {unlocked.length > 0 && (
+                            <div>
+                                <h3 className="mb-1 px-2 text-xs font-medium text-neutral-500">
+                                    Unlocked · <span className="font-mono tabular-nums">{unlocked.length}</span>
+                                </h3>
+                                <div className="flex flex-col gap-1">
+                                    {unlocked.map((a) => (
+                                        <AchievementBadge key={a.id} {...a} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {locked.length > 0 && (
+                            <div>
+                                <h3 className="mb-1 px-2 text-xs font-medium text-neutral-500">
+                                    Locked · <span className="font-mono tabular-nums">{locked.length}</span>
+                                </h3>
+                                <div className="flex flex-col gap-1">
+                                    {locked.map((a) => (
+                                        <AchievementBadge key={a.id} {...a} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </Modal>
             )}
