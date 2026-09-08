@@ -7,6 +7,7 @@ interface Records {
 
 interface Props {
     records: Records;
+    showWeek?: boolean;
     showMonth?: boolean;
 }
 
@@ -32,7 +33,7 @@ function getWeekEnd(weekStart: string): string {
     return date.toISOString().slice(0, 10);
 }
 
-export default function PersonalRecords({ records, showMonth = true }: Props) {
+export default function PersonalRecords({ records, showWeek = true, showMonth = true }: Props) {
     if (!records) return null;
 
     return (
@@ -54,7 +55,7 @@ export default function PersonalRecords({ records, showMonth = true }: Props) {
                         </div>
                     </div>
                 )}
-                {records.mostCommitsInAWeek && (
+                {showWeek && records.mostCommitsInAWeek && (
                     <div className="min-w-30 flex-1">
                         <div className="text-xl font-bold text-neutral-100">
                             {records.mostCommitsInAWeek.count}

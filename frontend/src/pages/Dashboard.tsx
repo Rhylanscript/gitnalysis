@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Period } from "../lib/api";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PeriodSelector from "../components/PeriodSelector";
 import StatCard from "../components/StatCard";
 import PublicDataNote from "../components/PublicDataNote";
@@ -37,6 +37,10 @@ export default function Dashboard() {
         queryFn: () => api.getAchievements(username!),
         enabled: !!username,
     });
+    
+    useEffect(() => {
+        if (user) document.title = `${user.login} · Gitnalysis`;
+    }, [user]);
 
     if (userLoading) {
         return (
@@ -81,7 +85,11 @@ export default function Dashboard() {
                                 <PublicDataNote restrictedCount={stats.restrictedContributionsCount} />
                                 <ActivityGraph weeks={stats.contributionCalendar.weeks} />
                                 <div className="mt-4">
-                                    <PersonalRecords records={stats.records} showMonth={period === "6mo" || period === "1yr" || period === "3mo"} />
+                                    <PersonalRecords 
+                                        records={stats.records} 
+                                        showWeek={period !== "7d"}
+                                        showMonth={period === "6mo" || period === "1yr" || period === "3mo"} 
+                                    />
                                 </div>
                             </>
                         )}
