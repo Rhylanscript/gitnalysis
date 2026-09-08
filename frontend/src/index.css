@@ -88,7 +88,7 @@
 	}
 }
 
-.gtn-landing .fade-up {
+.fade-up {
 	opacity: 0;
 	animation: gtn-fade-up 0.7s ease-out forwards;
 }
@@ -105,7 +105,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.gtn-landing * {
+	.fade-up,
+	.square,
+	.square-field,
+	.cursor {
 		animation: none !important;
 		opacity: 1 !important;
 		transform: none !important;
