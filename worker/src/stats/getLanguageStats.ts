@@ -13,14 +13,13 @@ export interface LanguageStatsResult extends LanguageStats {
 export async function getLanguageStats(
     username: string, 
     env: Env,
-    period?: Period,
+    sinceDate?: string,
 ): Promise<LanguageStatsResult> {
     const repos = await fetchUserRepos(username, env);
     let candidateRepos = repos.filter((r) => !r.fork);
 
-    if (period) {
-        const { from } = periodToRange(period);
-        candidateRepos = candidateRepos.filter((r) => new Date(r.pushed_at) >= new Date(from));
+    if (sinceDate) {
+        candidateRepos = candidateRepos.filter((r) => new Date(r.pushed_at) >= new Date(sinceDate));
     }
 
     const limitedRepos = candidateRepos.slice(0, MAX_REPOS_FOR_LANGUAGES);

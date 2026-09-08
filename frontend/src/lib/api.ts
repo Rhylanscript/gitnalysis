@@ -42,6 +42,7 @@ export interface Stats {
     totalPullRequestContributions: number;
     totalPullRequestReviewContributions: number;
     totalRepositoriesWithContributedCommits: number;
+    totalRepositoryContributions: number;
     restrictedContributionsCount: number;
     contributionCalendar: {
         totalContributions: number;
@@ -54,6 +55,8 @@ export interface Stats {
         mostCommitsInAWeek: { weekStart: string; count: number } | null;
         mostActiveMonth: { month: string; count: number } | null;
         mostActiveRepo: { name: string; count: number } | null;
+        topRepos: { name: string; count: number }[];
+        activeDays: { active: number; total: number };
     };
 }
 
@@ -78,10 +81,21 @@ export interface AchievementsResult {
     basedOnPeriod: "1yr";
 }
 
+export interface RecapComparisonMetrics {
+    totalCommitContributions: number;
+    totalPullRequestContributions: number;
+    totalIssueContributions: number;
+    totalPullRequestReviewContributions: number;
+    totalRepositoriesWithContributedCommits: number;
+    totalRepositoryContributions: number;
+}
+
 export interface Recap extends Stats {
     recapType: RecapType;
     from: string;
     to: string;
+    languages: { name: string; bytes: number; percentage: number }[];
+    previous: RecapComparisonMetrics;
 }
 
 export const api = {

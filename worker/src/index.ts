@@ -3,7 +3,7 @@ import { fetchContributedNotOwnedCount, fetchContributions } from "./github/grap
 import { calculateAchievements } from "./stats/achievements";
 import { getLanguageStats } from "./stats/getLanguageStats";
 import { Period, periodToRange } from "./stats/period";
-import { getRecapRange, RecapType } from "./stats/recap";
+import { getPreviousRecapRange, getRecapRange, RecapType } from "./stats/recap";
 import { calculateRecords } from "./stats/records";
 import { calculateStreaks } from "./stats/streaks";
 import { Env } from "./types";
@@ -113,7 +113,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         }
 
         try {
-            const stats = await getLanguageStats(username, env, periodParam ?? undefined);
+            const { from } = periodParam ? periodToRange(periodParam) : { from: undefined };
+            const stats = await getLanguageStats(username, env, from);
             const result = { ...stats, estimate: true, period: periodParam ?? "all" };
 
             await setCached(env, cacheKey, result);
@@ -211,9 +212,38 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
         try {
             const { from, to } = getRecapRange(type, year);
-            const contributions = await fetchContributions(username, from, to, env);
+            const { from: prevFrom, to: prevTo } = getPreviousRecapRange(type, year);
+
+            const [contributions, previousContributions, languageStats] = await Promise.all([
+                fetchContributions(username, from, to, env),
+                fetchContributions(username, prevFrom, prevTo, env),
+                getLanguageStats(username, env, from),
+            ]);
             const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
-            const result = { ...contributions, ...streaks, recapType: type, from, to };
+            const records = calculateRecords(
+                contributions.contributionCalendar.weeks,
+                contributions.commitContributionsByRepository
+            );
+
+            const previous = {
+                totalCommitContributions: previousContributions.totalCommitContributions,
+                totalPullRequestContributions: previousContributions.totalPullRequestContributions,
+                totalIssueContributions: previousContributions.totalIssueContributions,
+                totalPullRequestReviewContributions: previousContributions.totalPullRequestReviewContributions,
+                totalRepositoriesWithContributedCommits: previousContributions.totalRepositoriesWithContributedCommits,
+                totalRepositoryContributions: previousContributions.totalRepositoryContributions,
+            }
+
+            const result = {
+                ...contributions, 
+                ...streaks, 
+                records, 
+                languages: languageStats.languages,
+                previous,
+                recapType: type, 
+                from, 
+                to 
+            };
 
             await setCached(env, cacheKey, result);
             return new Response(JSON.stringify(result), {

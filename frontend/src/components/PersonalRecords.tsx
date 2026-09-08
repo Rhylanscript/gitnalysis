@@ -7,7 +7,8 @@ interface Records {
 
 interface Props {
     records: Records;
-    period: string;
+    showWeek?: boolean;
+    showMonth?: boolean;
 }
 
 function formatDate(dateStr: string): string {
@@ -32,10 +33,8 @@ function getWeekEnd(weekStart: string): string {
     return date.toISOString().slice(0, 10);
 }
 
-export default function PersonalRecords({ records, period }: Props) {
+export default function PersonalRecords({ records, showWeek = true, showMonth = true }: Props) {
     if (!records) return null;
-
-    const showMonth = period === "3mo" || period === "6mo" || period === "1yr";
 
     return (
         <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
@@ -56,7 +55,7 @@ export default function PersonalRecords({ records, period }: Props) {
                         </div>
                     </div>
                 )}
-                {records.mostCommitsInAWeek && (
+                {showWeek && records.mostCommitsInAWeek && (
                     <div className="min-w-30 flex-1">
                         <div className="text-xl font-bold text-neutral-100">
                             {records.mostCommitsInAWeek.count}

@@ -25,7 +25,7 @@ export function periodToRange(period: Period): { from: string; to: string } {
     return { from: from.toISOString(), to: to.toISOString() };
 }
 
-export function lastWeekRange(): { from: string, to: string } {
+export function weekRange(weeksAgo: number): { from: string, to: string } {
     const now = new Date();
     const dayOfWeek = now.getUTCDay(); // where 0 = sunday ... 6 = saturday
     const daysSinceSaturday = (dayOfWeek - 6 + 7) % 7;  // tuff is calling
@@ -37,20 +37,20 @@ export function lastWeekRange(): { from: string, to: string } {
             now.getUTCDate() - daysSinceSaturday
         )
     );
-    const lastSaturday = new Date(thisSaturday);
-    lastSaturday.setUTCDate(thisSaturday.getUTCDate() - 7);
-    const dayBeforeThisSaturday = new Date(thisSaturday.getTime() - 1); // eo last friyay
+    const targetSaturday = new Date(thisSaturday);
+    targetSaturday.setUTCDate(thisSaturday.getUTCDate() - 7 * weeksAgo);
+    const endOfTargetWeek = new Date(targetSaturday.getTime() + 7 * 24 * 60 * 60 * 1000 - 1); // eo last friyay
 
-    return { from: lastSaturday.toISOString(), to: dayBeforeThisSaturday.toISOString() };
+    return { from: targetSaturday.toISOString(), to: endOfTargetWeek.toISOString() };
 }
 
-export function lastMonthRange(): { from: string; to: string } {
+export function monthRange(monthsAgo: number): { from: string; to: string } {
     const now = new Date();
-    const firstOfThisMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-    const firstOfLastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
-    const lastOfLastMonth  = new Date(firstOfThisMonth.getTime() - 1);
+    const firstOfTargetMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - monthsAgo, 1));
+    const firstOfNextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - monthsAgo + 1, 1));
+    const lastOfTargetMonth  = new Date(firstOfNextMonth.getTime() - 1);
 
-    return { from: firstOfLastMonth.toISOString(), to: lastOfLastMonth.toISOString() };
+    return { from: firstOfTargetMonth.toISOString(), to: lastOfTargetMonth.toISOString() };
 }
 
 export function yearRange(year: number): { from: string; to: string } {

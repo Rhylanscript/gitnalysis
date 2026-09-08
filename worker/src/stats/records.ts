@@ -17,6 +17,8 @@ export interface PersonalRecords {
     mostCommitsInAWeek: { weekStart: string; count: number } | null;
     mostActiveMonth: { month: string; count: number } | null;
     mostActiveRepo: { name: string; count: number } | null;
+    topRepos: { name: string; count: number }[];
+    activeDays: { active: number; total: number };
 }
 
 export function calculateRecords(
@@ -63,5 +65,15 @@ export function calculateRecords(
             null
     );
 
-    return { mostCommitsInADay, mostCommitsInAWeek, mostActiveMonth, mostActiveRepo };
+    const topRepos = [...repoContributions]
+        .sort((a, b) => b.contributions.totalCount - a.contributions.totalCount)
+        .slice(0, 5)
+        .map((r) => ({ name: r.repository.name, count: r.contributions.totalCount }));
+
+    const activeDays = {
+        active: allDays.filter((d) => d.contributionCount > 0).length,
+        total: allDays.length,
+    };
+
+    return { mostCommitsInADay, mostCommitsInAWeek, mostActiveMonth, mostActiveRepo, topRepos, activeDays };
 }
