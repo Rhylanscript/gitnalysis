@@ -7,6 +7,7 @@ import LanguageChart from "../components/LanguageChart";
 import PublicDataNote from "../components/PublicDataNote";
 import { ActivityRadarSkeleton, LanguageChartSkeleton, PersonalRecordsSkeleton, RecapGridSkeleton, RecapHeroSkeleton } from "../components/Skeletons";
 import { useEffect } from "react";
+import { useSlidingIndicator } from "../hooks/useSlidingIndicator";
 
 const TABS: { type: RecapType; label: string }[] = [
     { type: "week", label: "Week" },
@@ -29,6 +30,8 @@ export default function Recap() {
     const defaultCompletedYear = currentYear - 1;
     const inProgress = recapType === "year" && (parsedYear ?? defaultCompletedYear) === currentYear;
 
+    const { containerRef, indicator, register } = useSlidingIndicator(recapType);
+
     const { data, isLoading, error } = useQuery({
         queryKey: ["recap", username, recapType, parsedYear],
         queryFn: () => api.getRecap(username!, recapType, parsedYear),
@@ -49,18 +52,26 @@ export default function Recap() {
                     Back to dashboard
                 </Link>
 
-                <div className="mt-4 mb-4 flex gap-1 rounded-md bg-neutral-900 p-1">
+                <div ref={containerRef} className="relative mt-4 mb-4 flex gap-1 rounded-md bg-neutral-900 p-1">
+                    {indicator && (
+                        <div
+                            className="absolute inset-y-1 rounded bg-emerald-400 transition-all duration-220 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                            style={{ left: indicator.left, width: indicator.width }}
+                        />
+                    )}
+
                     {TABS.map((tab) => (
                         <Link
                             key={tab.type}
+                            ref={register(tab.type)}
                             to={
                                 tab.type === "year"
                                     ? `/${username}/recap/year/${defaultCompletedYear}`
                                     : `/${username}/recap/${tab.type}`
                             }
-                            className={`rounded px-4 py-1.5 text-sm font-medium transition-colors ${
+                            className={`relative z-10 rounded px-4 py-1.5 text-sm font-medium transition-colors ${
                                 recapType === tab.type
-                                    ? "bg-neutral-400 text-neutral-950"
+                                    ? "text-neutral-950"
                                     : "text-neutral-400 hover:text-neutral-100"
                             }`}
                             >
