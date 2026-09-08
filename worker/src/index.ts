@@ -113,7 +113,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         }
 
         try {
-            const stats = await getLanguageStats(username, env, periodParam ?? undefined);
+            const { from } = periodParam ? periodToRange(periodParam) : { from: undefined };
+            const stats = await getLanguageStats(username, env, from);
             const result = { ...stats, estimate: true, period: periodParam ?? "all" };
 
             await setCached(env, cacheKey, result);
@@ -211,13 +212,24 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
         try {
             const { from, to } = getRecapRange(type, year);
-            const contributions = await fetchContributions(username, from, to, env);
+            const [contributions, languageStats] = await Promise.all([
+                fetchContributions(username, from, to, env),
+                getLanguageStats(username, env, from),
+            ]);
             const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
             const records = calculateRecords(
                 contributions.contributionCalendar.weeks,
                 contributions.commitContributionsByRepository
             );
-            const result = { ...contributions, ...streaks, records, recapType: type, from, to };
+            const result = {
+                ...contributions, 
+                ...streaks, 
+                records, 
+                languages: languageStats.languages,
+                recapType: type, 
+                from, 
+                to 
+            };
 
             await setCached(env, cacheKey, result);
             return new Response(JSON.stringify(result), {

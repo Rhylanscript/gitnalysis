@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api, type RecapType } from "../lib/api";
 import ActivityRadar from "../components/ActivityRadar";
 import PersonalRecords from "../components/PersonalRecords";
+import LanguageChart from "../components/LanguageChart";
 
 const TABS: { type: RecapType; label: string }[] = [
     { type: "week", label: "Week" },
@@ -110,6 +111,40 @@ export default function Recap() {
                                 reposCreated={data.totalRepositoryContributions}
                             />
                         </div>
+
+                        <div className="mb-8 grid gap-6 sm:grid-cols-2">
+                            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+                                <h2 className="mb-3 text-sm font-medium text-neutral-400">Top repos</h2>
+                                <div className="flex flex-col gap-2">
+                                    {data.records.topRepos.map((r, i) => (
+                                        <div key={r.name} className="flex items-center gap-2 text-sm">
+                                            <span className="w-4 text-xs font-semibold text-neutral-600">#{i + 1}</span>
+                                            <span className="text-neutral-100">{r.name}</span>
+                                            <span className="text-neutral-500">{r.count}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+                                <h2 className="mb-1 text-sm font-medium text-neutral-400">Active days</h2>
+                                <div className="text-2xl font-bold text-neutral-100">
+                                    {data.records.activeDays.active} / {data.records.activeDays.total}
+                                </div>
+                                <div className="text-xs text-neutral-500">days with contributions</div>
+                            </div>
+                        </div>
+
+                        {data.languages.length > 0 && (
+                            <div className="mb-8">
+                                <LanguageChart
+                                    languages={data.languages}
+                                    reposAnalysed={data.languages.length}
+                                    totalRepos={data.languages.length}
+                                    period="all"
+                                />
+                            </div>
+                        )}
 
                         <PersonalRecords records={data.records} showMonth={recapType !== "week"} />
                     </>

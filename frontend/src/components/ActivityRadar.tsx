@@ -35,7 +35,13 @@ export default function ActivityRadar({
                     <PolarGrid stroke="#262626" />
                     <PolarAngleAxis dataKey="label" tick={{ fill: "#a3a3a3", fontSize: 12 }} />
                     <PolarRadiusAxis tick={false} axisLine={false} domain={[0, 100]} />
-                    <Radar dataKey="value" stroke="#4ade80" fill="#4ade80" fillOpacity={0.35} />
+                    <Radar 
+                        dataKey="value" 
+                        stroke="#4ade80" 
+                        fill="#4ade80" 
+                        fillOpacity={0.35} 
+                        dot={{ r: 3, fill: "#4ade80", strokeWidth: 0}}
+                    />
                     <Tooltip
                         content={({ active, payload }) => {
                             if (!active || !payload?.length) return null;

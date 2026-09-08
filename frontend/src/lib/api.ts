@@ -55,6 +55,8 @@ export interface Stats {
         mostCommitsInAWeek: { weekStart: string; count: number } | null;
         mostActiveMonth: { month: string; count: number } | null;
         mostActiveRepo: { name: string; count: number } | null;
+        topRepos: { name: string; count: number }[];
+        activeDays: { active: number; total: number };
     };
 }
 
@@ -83,6 +85,7 @@ export interface Recap extends Stats {
     recapType: RecapType;
     from: string;
     to: string;
+    languages: { name: string; bytes: number; percentage: number }[];
 }
 
 export const api = {
