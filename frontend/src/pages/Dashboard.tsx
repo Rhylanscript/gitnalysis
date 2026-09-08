@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Period } from "../lib/api";
 import { useEffect, useState } from "react";
@@ -10,6 +10,7 @@ import PersonalRecords from "../components/PersonalRecords";
 import LanguageChart from "../components/LanguageChart";
 import Sidebar from "../components/Sidebar";
 import { ActivityGraphSkeleton, LanguageChartSkeleton, SidebarSkeleton, StatCardSkeleton } from "../components/Skeletons";
+import { Home } from "lucide-react";
 
 export default function Dashboard() {
     const { username } = useParams<{ username: string }>();
@@ -66,6 +67,13 @@ export default function Dashboard() {
 
                 <div className="min-w-0 flex-1">
                     <div className="mb-6 flex justify-end">
+                        <Link
+                            to="/"
+                            className="mr-auto flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-100"
+                        >
+                            <Home size={16} />
+                            <span className="hidden sm:inline">Home</span>
+                        </Link>
                         <PeriodSelector value={period} onChange={setPeriod} />
                     </div>
 
