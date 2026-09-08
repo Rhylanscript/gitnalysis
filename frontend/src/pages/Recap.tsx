@@ -60,7 +60,7 @@ export default function Recap() {
                             }
                             className={`rounded px-4 py-1.5 text-sm font-medium transition-colors ${
                                 recapType === tab.type
-                                    ? "bg-neutral-100 text-neutral-900"
+                                    ? "bg-neutral-400 text-neutral-950"
                                     : "text-neutral-400 hover:text-neutral-100"
                             }`}
                             >
@@ -77,7 +77,7 @@ export default function Recap() {
                                 to={`/${username}/recap/year/${y}`}
                                 className={`rounded px-3 py-1 text-sm ${
                                     (parsedYear ?? defaultCompletedYear) === y
-                                        ? "bg-neutral-100 text-neutral-900"
+                                        ? "bg-neutral-400 text-neutral-950"
                                         : "bg-neutral-900 text-neutral-400 hover:text-neutral-100"
                                 }`}
                             >
@@ -115,7 +115,7 @@ export default function Recap() {
                                 {formatRangeLabel(recapType, data.from, data.to, parsedYear)}
                                 {inProgress && " · in progress"}
                             </div>
-                            <div className="text-5xl font-bold text-neutral-100">
+                            <div className="font-mono tabular-nums text-5xl font-bold text-neutral-100">
                                 {data.contributionCalendar.totalContributions}
                             </div>
                             <div className="text-neutral-400">contributions</div>
@@ -163,7 +163,7 @@ export default function Recap() {
 
                             <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
                                 <h2 className="mb-1 text-sm font-medium text-neutral-400">Active days</h2>
-                                <div className="text-2xl font-bold text-neutral-100">
+                                <div className="font-mono tabular-nums text-2xl font-bold text-neutral-100">
                                     {data.records.activeDays.active} / {data.records.activeDays.total}
                                 </div>
                                 <div className="text-xs text-neutral-500">days with contributions</div>
