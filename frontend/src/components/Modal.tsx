@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
+import { createPortal } from "react-dom";
 
 interface Props {
     title: string;
@@ -21,7 +22,7 @@ export default function Modal({ title, onClose, children }: Props) {
         };
     }, [onClose]);
 
-    return (
+    return createPortal(
         <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
             onClick={onClose}
@@ -38,6 +39,7 @@ export default function Modal({ title, onClose, children }: Props) {
                 </div>
                 <div className="custom-scrollbar overflow-y-auto p-4">{children}</div>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }
