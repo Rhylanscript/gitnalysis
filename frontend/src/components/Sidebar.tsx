@@ -1,15 +1,17 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { CalendarDays, CalendarRange, Sparkles, ChevronRight } from "lucide-react";
 import type { GitHubUser, Achievement } from "../lib/api";
 import AchievementBadge from "./AchievementBadge";
-import { Link } from "react-router-dom";
+import Modal from "./Modal";
 
 interface Props {
-    user: GitHubUser;
-    achievements?: Achievement[];
+  user: GitHubUser;
+  achievements?: Achievement[];
 }
 
 export default function Sidebar({ user, achievements }: Props) {
-    const [showLocked, setShowLocked] = useState(false);
+    const [showAllModal, setShowAllModal] = useState(false);
 
     const unlocked = achievements?.filter((a) => a.unlocked) ?? [];
     const locked = achievements?.filter((a) => !a.unlocked) ?? [];
@@ -31,6 +33,44 @@ export default function Sidebar({ user, achievements }: Props) {
                 </div>
             </div>
 
+            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+                <h2 className="mb-3 text-sm font-medium text-neutral-400">Recaps</h2>
+                <div className="flex flex-col gap-1">
+                    <Link
+                        to={`/${user.login}/recap/week`}
+                        className="group flex items-center gap-3 rounded-md p-2 hover:bg-neutral-800"
+                    >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-neutral-400">
+                            <CalendarDays size={16} />
+                        </div>
+                        <span className="flex-1 text-sm font-medium text-neutral-100">Week recap</span>
+                        <ChevronRight size={16} className="text-neutral-600 group-hover:text-neutral-400" />
+                    </Link>
+
+                    <Link
+                        to={`/${user.login}/recap/month`}
+                        className="group flex items-center gap-3 rounded-md p-2 hover:bg-neutral-800"
+                    >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-neutral-400">
+                            <CalendarRange size={16} />
+                        </div>
+                        <span className="flex-1 text-sm font-medium text-neutral-100">Month recap</span>
+                        <ChevronRight size={16} className="text-neutral-600 group-hover:text-neutral-400" />
+                    </Link>
+
+                    <Link
+                        to={`/${user.login}/recap/year/${new Date().getFullYear() - 1}`}
+                        className="group flex items-center gap-3 rounded-md p-2 hover:bg-neutral-800"
+                    >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+                            <Sparkles size={16} />
+                        </div>
+                        <span className="flex-1 text-sm font-medium text-neutral-100">Year recap</span>
+                        <ChevronRight size={16} className="text-neutral-600 group-hover:text-neutral-400" />
+                    </Link>
+                </div>
+            </div>
+
             {achievements && (
                 <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
                     <h2 className="mb-3 text-sm font-medium text-neutral-400">
@@ -48,43 +88,25 @@ export default function Sidebar({ user, achievements }: Props) {
                     )}
 
                     {locked.length > 0 && (
-                        <>
-                            <button
-                                onClick={() => setShowLocked((prev) => !prev)}
-                                className="mt-3 w-full text-left text-xs font-medium text-neutral-500 hover:text-neutral-300"
-                            >
-                                {showLocked ? "Hide" : "Show"} {locked.length} locked
-                            </button>
-
-                            {showLocked && (
-                                <div className="mt-2 flex flex-col gap-1 border-t border-neutral-800 pt-2">
-                                    {locked.map((a) => (
-                                        <AchievementBadge key={a.id} {...a} />
-                                    ))}
-                                </div>
-                            )}
-                        </>
+                        <button
+                            onClick={() => setShowAllModal(true)}
+                            className="mt-3 w-full text-left text-xs font-medium text-neutral-500 hover:text-neutral-300"
+                        >
+                            View all {achievements.length} achievements
+                        </button>
                     )}
                 </div>
             )}
 
-            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-                <h2 className="mb-3 text-sm font-medium text-neutral-400">Recaps</h2>
-                <div className="flex flex-col gap-1 text-sm">
-                    <Link to={`/${user.login}/recap/week`} className="text-neutral-300 hover:text-neutral-100">
-                        Week recap
-                    </Link>
-                    <Link to={`/${user.login}/recap/month`} className="text-neutral-300 hover:text-neutral-100">
-                        Month recap
-                    </Link>
-                    <Link
-                        to={`/${user.login}/recap/year/${new Date().getFullYear() - 1}`}
-                        className="text-neutral-300 hover:text-neutral-100"
-                    >
-                        Year recap
-                    </Link>
-                </div>
-            </div>
+            {showAllModal && achievements && (
+                <Modal title="All achievements" onClose={() => setShowAllModal(false)}>
+                    <div className="flex flex-col gap-1">
+                        {achievements.map((a) => (
+                            <AchievementBadge key={a.id} {...a} />
+                        ))}
+                    </div>
+                </Modal>
+            )}
         </aside>
     );
 }
