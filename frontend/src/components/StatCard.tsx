@@ -6,7 +6,7 @@ interface Props {
 export default function StatCard({ label, value }: Props) {
     return (
         <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-            <div className="text-2xl font-bold text-neutral-100">{value}</div>
+            <div className="font-mono tabular-nums text-2xl font-bold text-neutral-100">{value}</div>
             <div className="text-sm text-neutral-400">{label}</div>
         </div>
     );

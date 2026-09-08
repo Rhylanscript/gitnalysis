@@ -7,6 +7,7 @@ import LanguageChart from "../components/LanguageChart";
 import PublicDataNote from "../components/PublicDataNote";
 import { ActivityRadarSkeleton, LanguageChartSkeleton, PersonalRecordsSkeleton, RecapGridSkeleton, RecapHeroSkeleton } from "../components/Skeletons";
 import { useEffect } from "react";
+import { useSlidingIndicator } from "../hooks/useSlidingIndicator";
 
 const TABS: { type: RecapType; label: string }[] = [
     { type: "week", label: "Week" },
@@ -29,6 +30,8 @@ export default function Recap() {
     const defaultCompletedYear = currentYear - 1;
     const inProgress = recapType === "year" && (parsedYear ?? defaultCompletedYear) === currentYear;
 
+    const { containerRef, indicator, register } = useSlidingIndicator(recapType);
+
     const { data, isLoading, error } = useQuery({
         queryKey: ["recap", username, recapType, parsedYear],
         queryFn: () => api.getRecap(username!, recapType, parsedYear),
@@ -49,18 +52,26 @@ export default function Recap() {
                     Back to dashboard
                 </Link>
 
-                <div className="mt-4 mb-4 flex gap-1 rounded-md bg-neutral-900 p-1">
+                <div ref={containerRef} className="relative mt-4 mb-4 flex gap-1 rounded-md bg-neutral-900 p-1">
+                    {indicator && (
+                        <div
+                            className="absolute inset-y-1 rounded bg-emerald-400 transition-all duration-220 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                            style={{ left: indicator.left, width: indicator.width }}
+                        />
+                    )}
+
                     {TABS.map((tab) => (
                         <Link
                             key={tab.type}
+                            ref={register(tab.type)}
                             to={
                                 tab.type === "year"
                                     ? `/${username}/recap/year/${defaultCompletedYear}`
                                     : `/${username}/recap/${tab.type}`
                             }
-                            className={`rounded px-4 py-1.5 text-sm font-medium transition-colors ${
+                            className={`relative z-10 rounded px-4 py-1.5 text-sm font-medium transition-colors ${
                                 recapType === tab.type
-                                    ? "bg-neutral-100 text-neutral-900"
+                                    ? "text-neutral-950"
                                     : "text-neutral-400 hover:text-neutral-100"
                             }`}
                             >
@@ -77,7 +88,7 @@ export default function Recap() {
                                 to={`/${username}/recap/year/${y}`}
                                 className={`rounded px-3 py-1 text-sm ${
                                     (parsedYear ?? defaultCompletedYear) === y
-                                        ? "bg-neutral-100 text-neutral-900"
+                                        ? "bg-neutral-400 text-neutral-950"
                                         : "bg-neutral-900 text-neutral-400 hover:text-neutral-100"
                                 }`}
                             >
@@ -115,7 +126,7 @@ export default function Recap() {
                                 {formatRangeLabel(recapType, data.from, data.to, parsedYear)}
                                 {inProgress && " · in progress"}
                             </div>
-                            <div className="text-5xl font-bold text-neutral-100">
+                            <div className="font-mono tabular-nums text-5xl font-bold text-neutral-100">
                                 {data.contributionCalendar.totalContributions}
                             </div>
                             <div className="text-neutral-400">contributions</div>
@@ -163,7 +174,7 @@ export default function Recap() {
 
                             <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
                                 <h2 className="mb-1 text-sm font-medium text-neutral-400">Active days</h2>
-                                <div className="text-2xl font-bold text-neutral-100">
+                                <div className="font-mono tabular-nums text-2xl font-bold text-neutral-100">
                                     {data.records.activeDays.active} / {data.records.activeDays.total}
                                 </div>
                                 <div className="text-xs text-neutral-500">days with contributions</div>

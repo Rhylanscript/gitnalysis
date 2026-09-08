@@ -105,7 +105,7 @@ export default function LanguageChart({ languages, reposAnalysed, totalRepos, pe
                                     style={{ backgroundColor: getLanguageColour(lang.name) }}
                                 />
                                 <span className="font-medium text-neutral-100">{lang.name}</span>
-                                <span className="text-sm text-neutral-500">{lang.percentage}%</span>
+                                <span className="font-mono tabular-nums text-sm text-neutral-500">{lang.percentage}%</span>
                             </div>
                         ))}
                     </div>
@@ -119,7 +119,7 @@ export default function LanguageChart({ languages, reposAnalysed, totalRepos, pe
                                         style={{ backgroundColor: getLanguageColour(lang.name) }}
                                     />
                                     <span className="text-xs text-neutral-400">{lang.name}</span>
-                                    <span className="text-xs text-neutral-600">{lang.percentage}%</span>
+                                    <span className="font-mono tabular-nums text-xs text-neutral-600">{lang.percentage}%</span>
                                 </div>
                             ))}
                         </div>

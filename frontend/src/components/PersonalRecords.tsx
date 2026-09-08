@@ -47,7 +47,7 @@ export default function PersonalRecords({ records, showWeek = true, showMonth = 
             <div className="flex flex-wrap gap-4">
                 {records.mostCommitsInADay && (
                     <div className="min-w-30 flex-1">
-                        <div className="text-xl font-bold text-neutral-100">
+                        <div className="font-mono tabular-nums text-xl font-bold text-neutral-100">
                             {records.mostCommitsInADay.count}
                         </div>
                         <div className="text-xs text-neutral-500">
@@ -57,7 +57,7 @@ export default function PersonalRecords({ records, showWeek = true, showMonth = 
                 )}
                 {showWeek && records.mostCommitsInAWeek && (
                     <div className="min-w-30 flex-1">
-                        <div className="text-xl font-bold text-neutral-100">
+                        <div className="font-mono tabular-nums text-xl font-bold text-neutral-100">
                             {records.mostCommitsInAWeek.count}
                         </div>
                         <div className="text-xs text-neutral-500">
@@ -68,7 +68,7 @@ export default function PersonalRecords({ records, showWeek = true, showMonth = 
                 )}
                 {showMonth && records.mostActiveMonth && (
                     <div className="min-w-30 flex-1">
-                        <div className="text-xl font-bold text-neutral-100">
+                        <div className="font-mono tabular-nums text-xl font-bold text-neutral-100">
                             {records.mostActiveMonth.count}
                         </div>
                         <div className="text-xs text-neutral-500">
@@ -78,7 +78,7 @@ export default function PersonalRecords({ records, showWeek = true, showMonth = 
                 )}
                 {records.mostActiveRepo && (
                     <div className="min-w-30 flex-1">
-                        <div className="text-xl font-bold text-neutral-100">
+                        <div className="font-mono tabular-nums text-xl font-bold text-neutral-100">
                             {records.mostActiveRepo.count}
                         </div>
                         <div className="text-xs text-neutral-500">
