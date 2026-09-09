@@ -157,13 +157,24 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             ]);
 
             const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
+            const records = calculateRecords(
+                contributions.contributionCalendar.weeks,
+                contributions.commitContributionsByRepository,
+            );
 
             const achievements = calculateAchievements({
                 languageCount: languageStats.languages.length,
                 longestStreak: streaks.longestStreak,
                 repoCount: contributions.totalRepositoriesWithContributedCommits,
                 contributedNotOwnedCount,
-                reviewCount: contributions.totalPullRequestReviewContributions,
+                totalReviews: contributions.totalPullRequestReviewContributions,
+                totalCommits: contributions.totalCommitContributions,
+                totalPRs: contributions.totalPullRequestContributions,
+                totalIssues: contributions.totalIssueContributions,
+                mostCommitsInADay: records.mostCommitsInADay?.count ?? 0,
+                mostCommitsInAWeek: records.mostCommitsInAWeek?.count ?? 0,
+                activeDays: records.activeDays,
+                reposCreated: contributions.totalRepositoryContributions,
             });
 
             const result = { achievements, basedOnPeriod: "1yr" as const };
