@@ -74,6 +74,7 @@ export interface Achievement {
     name: string;
     description: string;
     unlocked: boolean;
+    secret: boolean;
 }
 
 export interface AchievementsResult {
