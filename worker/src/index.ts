@@ -1,6 +1,7 @@
 import { getCached, setCached } from "./cache";
 import { fetchContributedNotOwnedCount, fetchContributions } from "./github/graphql";
 import { calculateAchievements } from "./stats/achievements";
+import { calculateDayOfWeekSplit } from "./stats/dayOfWeek";
 import { getLanguageStats } from "./stats/getLanguageStats";
 import { Period, periodToRange } from "./stats/period";
 import { getPreviousRecapRange, getRecapRange, RecapType } from "./stats/recap";
@@ -157,13 +158,30 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             ]);
 
             const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
+            const records = calculateRecords(
+                contributions.contributionCalendar.weeks,
+                contributions.commitContributionsByRepository,
+            );
+
+            const { weekend, weekday } = calculateDayOfWeekSplit(contributions.contributionCalendar.weeks);
 
             const achievements = calculateAchievements({
                 languageCount: languageStats.languages.length,
                 longestStreak: streaks.longestStreak,
                 repoCount: contributions.totalRepositoriesWithContributedCommits,
                 contributedNotOwnedCount,
-                reviewCount: contributions.totalPullRequestReviewContributions,
+                totalReviews: contributions.totalPullRequestReviewContributions,
+                totalCommits: contributions.totalCommitContributions,
+                totalPRs: contributions.totalPullRequestContributions,
+                totalIssues: contributions.totalIssueContributions,
+                mostCommitsInADay: records.mostCommitsInADay?.count ?? 0,
+                mostCommitsInAWeek: records.mostCommitsInAWeek?.count ?? 0,
+                activeDays: records.activeDays,
+                reposCreated: contributions.totalRepositoryContributions,
+                weekendContributions: weekend,
+                weekdayContributions: weekday,
+                totalContributions: contributions.contributionCalendar.totalContributions,
+                mostActiveRepoCommits: records.mostActiveRepo?.count ?? 0,
             });
 
             const result = { achievements, basedOnPeriod: "1yr" as const };
