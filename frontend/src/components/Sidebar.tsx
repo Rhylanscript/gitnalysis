@@ -10,6 +10,8 @@ interface Props {
   achievements?: Achievement[];
 }
 
+const VISIBLE_UNLOCKED = 5;
+
 export default function Sidebar({ user, achievements }: Props) {
     const [showAllModal, setShowAllModal] = useState(false);
 
@@ -79,7 +81,7 @@ export default function Sidebar({ user, achievements }: Props) {
 
                     {unlocked.length > 0 ? (
                         <div className="flex flex-col gap-1">
-                            {unlocked.map((a) => (
+                            {unlocked.slice(0, VISIBLE_UNLOCKED).map((a) => (
                                 <AchievementBadge key={a.id} {...a} />
                             ))}
                         </div>
@@ -87,12 +89,14 @@ export default function Sidebar({ user, achievements }: Props) {
                         <p className="text-xs text-neutral-500">No achievements unlocked yet.</p>
                     )}
 
-                    {locked.length > 0 && (
+                    {achievements.length > 0 && (
                         <button
                             onClick={() => setShowAllModal(true)}
                             className="mt-3 w-full text-left text-xs font-medium text-neutral-500 hover:text-neutral-300"
                         >
-                            View all {achievements.length} achievements
+                            {unlocked.length > VISIBLE_UNLOCKED
+                                ? `View all ${achievements.length} achievements (${unlocked.length - VISIBLE_UNLOCKED} more unlocked)`
+                                : `View all ${achievements.length} achievements`}
                         </button>
                     )}
                 </div>
