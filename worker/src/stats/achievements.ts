@@ -23,6 +23,11 @@ export interface AchievementInput {
     activeDays: { active: number; total: number };
 
     reposCreated: number;
+
+    weekendContributions: number;
+    weekdayContributions: number;
+    totalContributions: number;
+    mostActiveRepoCommits: number;
 }
 
 const THRESHOLDS = {
@@ -51,8 +56,8 @@ const THRESHOLDS = {
     // code review
     // lgtm: 1
     reviewer: 10,
-    code_auditor: 20,
-    overseer: 50,
+    code_auditor: 50,
+    overseer: 100,
 
     // commit count
     century: 100,
@@ -81,13 +86,23 @@ const THRESHOLDS = {
     steady: 0.8,
     focus: 0.9,
     ai_in_disguise: 0.95,
-    scripter: 1.0,
+    scripter: 1.0,                  // secret
 
     // repos created
     founder: 3,
     tycoon: 20,
 
+    // day of week stuff
+    weekend_warrior: 0.75,           // secret
+
+    // balance
+    well_rounded_max_share: 0.9,    // secret
+    well_rounded_min_share: 0.1,
+
     // misc / secret
+
+    one_repo_wonder_ratio: 0.8,
+    one_repo_wonder_min_commits: 50,
 
     over_9000: 9000,            // secret
     // answer_to_everything: 42,   // secret
@@ -97,6 +112,15 @@ export function calculateAchievements(input: AchievementInput): Achievement[] {
     const activeRatio = input.activeDays.total > 0 ? input.activeDays.active / input.activeDays.total : 0;
 
     const base: Achievement[] = [
+        // freebie
+        {
+            id: "hello_world",
+            name: "Hello, World",
+            description: `Made your first commit`,
+            unlocked: input.totalCommits >= 1,
+            secret: false,
+        },
+
         // lang variety
         {
             id: "multilingual",
@@ -385,6 +409,51 @@ export function calculateAchievements(input: AchievementInput): Achievement[] {
             secret: false,
         },
 
+        // day of week pattern
+        {
+            id: "weekend_warrior",
+            name: "Weekend Warrior",
+            description: `${Math.round(THRESHOLDS.weekend_warrior * 100)}%+ of contributions made on weekends`,
+            unlocked:
+                input.totalContributions > 0 &&
+                input.weekendContributions / input.totalContributions >= THRESHOLDS.weekend_warrior,
+            secret: true,
+        },
+        {
+            id: "well_rounded",
+            name: "Well Rounded",
+            description: `A well rounded mix of commits, PRs, issues, and reviews`,
+            unlocked: (() => {
+                const counts = [input.totalCommits, input.totalPRs, input.totalIssues, input.totalReviews];
+                const total = input.totalCommits + input.totalPRs + input.totalIssues + input.totalReviews;
+                if (total <= 0) return false;
+                return counts.every((count) => {
+                    const share = count / total;
+                    return (
+                        share >= THRESHOLDS.well_rounded_min_share &&
+                        share <= THRESHOLDS.well_rounded_max_share
+                    );
+                });
+            })(),
+            secret: true,
+        },
+        {
+            id: "one_repo_wonder",
+            name: "One Repo Wonder",
+            description: `Nearly all your commits went to a single repository`,
+            unlocked:
+                input.totalCommits >= THRESHOLDS.one_repo_wonder_min_commits &&
+                input.mostActiveRepoCommits / input.totalCommits >= THRESHOLDS.one_repo_wonder_ratio,
+            secret: true,
+        },
+        {
+            id: "backseat_driver",
+            name: "Backseat Driver",
+            description: `Reviewed more code than you committed`,
+            unlocked: input.totalReviews > input.totalCommits && input.totalReviews > 0,
+            secret: true,
+        },
+
         // misc / secrets
         // {
         //     id: "answer_to_everything",
@@ -396,8 +465,8 @@ export function calculateAchievements(input: AchievementInput): Achievement[] {
         {
             id: "over_9000",
             name: "Over 9000",
-            description: `Made ${THRESHOLDS.over_9000}+ commits in a year`,
-            unlocked: input.totalCommits > THRESHOLDS.over_9000,
+            description: `Made ${THRESHOLDS.over_9000}+ contributions in a year`,
+            unlocked: input.totalContributions > THRESHOLDS.over_9000,
             secret: true,
         },
     ];
@@ -409,9 +478,7 @@ export function calculateAchievements(input: AchievementInput): Achievement[] {
         name: "Completionist",
         description: `Unlocked all achievements (except secrets)`,
         unlocked: base.every((a) => {
-            if (!a.secret) {
-                return a.unlocked;
-            }
+            return a.secret || a.unlocked;
         }),
         secret: false,
     };

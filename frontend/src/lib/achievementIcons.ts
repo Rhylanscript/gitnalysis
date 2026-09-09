@@ -1,6 +1,8 @@
-import { Award, BicepsFlexed, BookMarked, Bug, CalendarCheck, CircleQuestionMark, Compass, Eye, Flame, GitBranch, GitCommitHorizontal, GitPullRequest, Languages, Trophy, Zap, type LucideIcon } from "lucide-react";
+import { Award, BicepsFlexed, BookMarked, Bug, CalendarCheck, CircleQuestionMark, Compass, Eye, EyeDashed, Flame, FolderHeart, GitBranch, GitCommitHorizontal, GitPullRequest, Languages, Palmtree, PieChart, Sprout, Trophy, Zap, type LucideIcon } from "lucide-react";
 
 export const ACHIEVEMENT_ICONS: Record<string, LucideIcon> = {
+    hello_world: Sprout,
+    
     multilingual: Languages,
     polyglot: Languages,
     hyperpolyglot: Languages,
@@ -50,7 +52,13 @@ export const ACHIEVEMENT_ICONS: Record<string, LucideIcon> = {
     founder: BookMarked,
     tycoon: BookMarked,
 
+    weekend_warrior: Palmtree,
+    well_rounded: PieChart,
+
+    one_repo_wonder: FolderHeart,
+    backseat_driver: EyeDashed,
     over_9000: BicepsFlexed,
+    
     completionist: Trophy,
     true_completionist: Trophy,
 };

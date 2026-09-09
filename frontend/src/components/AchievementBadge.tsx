@@ -27,7 +27,7 @@ export default function AchievementBadge({ id, name, description, unlocked, secr
     return (
         <div
             className={`flex items-start gap-3 rounded-md p-2 ${unlocked ? "" : "opacity-40"}`}
-            title={isMystery ? "Keep exploring to find out" : description}
+            // title={isMystery ? "Keep exploring to find out" : description}
         >
             <div
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
