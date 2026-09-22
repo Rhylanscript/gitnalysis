@@ -12,10 +12,10 @@ export interface LanguageStatsResult extends LanguageStats {
 
 export async function getLanguageStats(
     username: string, 
-    env: Env,
+    token: string,
     sinceDate?: string,
 ): Promise<LanguageStatsResult> {
-    const repos = await fetchUserRepos(username, env);
+    const repos = await fetchUserRepos(username, token);
     let candidateRepos = repos.filter((r) => !r.fork);
 
     if (sinceDate) {
@@ -27,7 +27,7 @@ export async function getLanguageStats(
     const repoLanguages = await Promise.all(
         limitedRepos.map(async (repo) => ({
             repo: repo.name,
-            languages: await fetchRepoLanguages(repo.full_name, env),
+            languages: await fetchRepoLanguages(repo.full_name, token),
         }))
     );
 

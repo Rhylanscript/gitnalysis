@@ -1,5 +1,6 @@
 import { buildExpiredSessionCookie, buildSessionCookie, getCookie } from "./auth/cookies";
 import { buildAuthorizeUrl, exchangeCodeForToken, fetchAuthenticatedUsername } from "./auth/github";
+import { resolveAccess } from "./auth/resolveToken";
 import { createOAuthState, createSession, deleteSession, getSession, verifyAndConsumeOAuthState } from "./auth/session";
 import { getCached, setCached } from "./cache";
 import { FRONTEND_URL, SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "./config";
@@ -74,7 +75,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             });
         }
 
-        const cacheKey = `${username}:${period}`;
+        const { token, isOwnPrivateData } = await resolveAccess(request, env, username);
+
+        const cacheKey = `${username}:${period}:${isOwnPrivateData ? "private" : "public"}`;
         const cached = await getCached<any>(env, cacheKey);
         if (cached) {
             return new Response(JSON.stringify(cached), {
@@ -85,7 +88,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         const { from, to } = periodToRange(period);
 
         try {
-            const contributions = await fetchContributions(username, from, to, env);
+            const contributions = await fetchContributions(username, from, to, token);
             const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
             const records = calculateRecords(
                 contributions.contributionCalendar.weeks,
@@ -117,7 +120,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             });
         }
 
-        const cacheKey = `languages:${username}:${periodParam ?? "all"}`;
+        const { token, isOwnPrivateData } = await resolveAccess(request, env, username);
+
+        const cacheKey = `languages:${username}:${periodParam ?? "all"}:${isOwnPrivateData ? "private" : "public"}`;
         const cached = await getCached<any>(env, cacheKey);
         if (cached) {
             return new Response(JSON.stringify(cached), {
@@ -127,7 +132,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
         try {
             const { from } = periodParam ? periodToRange(periodParam) : { from: undefined };
-            const stats = await getLanguageStats(username, env, from);
+            const stats = await getLanguageStats(username, token, from);
             const result = { ...stats, estimate: true, period: periodParam ?? "all" };
 
             await setCached(env, cacheKey, result);
@@ -152,7 +157,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             });
         }
 
-        const cacheKey = `achievements:${username}`;
+        const { token, isOwnPrivateData } = await resolveAccess(request, env, username);
+
+        const cacheKey = `achievements:${username}:${isOwnPrivateData ? "private" : "public"}`;
         const cached = await getCached<any>(env, cacheKey);
         if (cached) {
             return new Response(JSON.stringify(cached), {
@@ -164,9 +171,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             const { from, to } = periodToRange("1yr");
 
             const [contributions, contributedNotOwnedCount, languageStats] = await Promise.all([
-                fetchContributions(username, from, to, env),
-                fetchContributedNotOwnedCount(username, env),
-                getLanguageStats(username, env),
+                fetchContributions(username, from, to, token),
+                fetchContributedNotOwnedCount(username, token),
+                getLanguageStats(username, token),
             ]);
 
             const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
@@ -230,8 +237,10 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             });
         }
 
+        const { token, isOwnPrivateData } = await resolveAccess(request, env, username);
+
         const year = yearParam ? parseInt(yearParam, 10) : undefined;
-        const cacheKey = `recap:${type}:${username}${year ? `:${year}` : ""}`;
+        const cacheKey = `recap:${type}:${username}${year ? `:${year}` : ""}:${isOwnPrivateData ? "private" : "public"}`;
 
         const cached = await getCached<any>(env, cacheKey);
         if (cached) {
@@ -245,9 +254,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             const { from: prevFrom, to: prevTo } = getPreviousRecapRange(type, year);
 
             const [contributions, previousContributions, languageStats] = await Promise.all([
-                fetchContributions(username, from, to, env),
-                fetchContributions(username, prevFrom, prevTo, env),
-                getLanguageStats(username, env, from),
+                fetchContributions(username, from, to, token),
+                fetchContributions(username, prevFrom, prevTo, token),
+                getLanguageStats(username, token, from),
             ]);
             const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
             const records = calculateRecords(
