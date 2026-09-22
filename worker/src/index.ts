@@ -1,4 +1,9 @@
+import { buildExpiredSessionCookie, buildSessionCookie, getCookie } from "./auth/cookies";
+import { buildAuthorizeUrl, exchangeCodeForToken, fetchAuthenticatedUsername } from "./auth/github";
+import { createOAuthState, createSession, deleteSession, getSession, verifyAndConsumeOAuthState } from "./auth/session";
 import { getCached, setCached } from "./cache";
+import { FRONTEND_URL, SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "./config";
+import { corsHeadersFor, handlePreflight } from "./cors";
 import { fetchContributedNotOwnedCount, fetchContributions } from "./github/graphql";
 import { calculateAchievements } from "./stats/achievements";
 import { calculateDayOfWeekSplit } from "./stats/dayOfWeek";
@@ -11,9 +16,16 @@ import { Env } from "./types";
 
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
+        if (request.method === "OPTIONS") {
+            return handlePreflight(request);
+        }
+
         const response = await handleRequest(request, env);
+
         const headers = new Headers(response.headers);
-        headers.set("Access-Control-Allow-Origin", "*");
+        const cors = corsHeadersFor(request);
+        cors.forEach((value, key) => headers.set(key, value));
+
         return new Response(response.body, { status: response.status, headers });
     },
 };
@@ -273,6 +285,59 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
                 headers: { "Content-Type": "application/json" },
             });
         }
+    }
+
+    if (url.pathname === "/auth/login") {
+        const state = await createOAuthState(env);
+        const authorizeUrl = buildAuthorizeUrl(env.GITHUB_OAUTH_CLIENT_ID, state);
+        return Response.redirect(authorizeUrl, 302);
+    }
+
+    if (url.pathname === "/auth/callback") {
+        const code = url.searchParams.get("code");
+        const state = url.searchParams.get("state");
+
+        if (!code || !state) {
+            return new Response("Missing code or state", { status: 400 });
+        }
+
+        const stateIsValid = await verifyAndConsumeOAuthState(env, state);
+        if (!stateIsValid) {
+            return new Response("Invalid or expired state", { status: 400 });
+        }
+
+        try {
+            const accessToken = await exchangeCodeForToken(code, env);
+            const username = await fetchAuthenticatedUsername(accessToken);
+            const sessionId = await createSession(env, { accessToken, username });
+
+            const headers = new Headers({ Location: `${FRONTEND_URL}/${username}` });
+            headers.append("Set-Cookie", buildSessionCookie(SESSION_COOKIE_NAME, sessionId, SESSION_TTL_SECONDS));
+
+            return new Response(null, { status: 302, headers });
+        } catch (err) {
+            return new Response(`Sign in failed: ${String(err)}`, { status: 502 });
+        }
+    }
+
+    if (url.pathname === "/auth/logout") {
+        const sessionId = getCookie(request, SESSION_COOKIE_NAME);
+        if (sessionId) await deleteSession(env, sessionId);
+
+        const headers = new Headers({ Location: FRONTEND_URL });
+        headers.append("Set-Cookie", buildExpiredSessionCookie(SESSION_COOKIE_NAME));
+
+        return new Response(null, { status: 302, headers });
+    }
+
+    if (url.pathname === "/auth/me") {
+        const sessionId = getCookie(request, SESSION_COOKIE_NAME);
+        const session = sessionId ? await getSession(env, sessionId) : null;
+
+        return new Response(
+            JSON.stringify(session ? { signedIn: true, username: session.username } : { signedIn: false }),
+            { headers: { "Content-Type": "application/json" } },
+        );
     }
 
     return new Response("Not found", { status: 404 });
