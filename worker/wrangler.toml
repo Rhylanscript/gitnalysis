@@ -3,6 +3,12 @@ main = "src/index.ts"
 compatibility_date = "2026-09-01"
 
 [vars]
+GITHUB_OAUTH_CLIENT_ID = "Ov23li1ifsA0K6BGkIXk"
+
 [[kv_namespaces]]
 binding = "STATS_CACHE"
 id = "73d9176e2ac24f2ca06b1cf9173b0546"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "a725e2f7b3aa4028ab4249bd324b63a8"
