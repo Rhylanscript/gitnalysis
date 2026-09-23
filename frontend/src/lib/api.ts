@@ -5,7 +5,7 @@ if (!API_URL) {
 }
 
 async function apiFetch<T>(path: string): Promise<T> {
-    const response = await fetch(`${API_URL}${path}`);
+    const response = await fetch(`${API_URL}${path}`, { credentials: "include" });
 
     if (!response.ok) {
         const body = await response.json().catch(() => ({}));
