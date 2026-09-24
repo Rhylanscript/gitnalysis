@@ -75,7 +75,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             });
         }
 
-        const { token, isOwnPrivateData } = await resolveAccess(request, env, username);
+        const includePrivate = url.searchParams.get("includePrivate") !== "false";
+        const { token, isOwnPrivateData } = await resolveAccess(request, env, username, includePrivate);
 
         const cacheKey = `${username}:${period}:${isOwnPrivateData ? "private" : "public"}`;
         const cached = await getCached<any>(env, cacheKey);
@@ -120,7 +121,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             });
         }
 
-        const { token, isOwnPrivateData } = await resolveAccess(request, env, username);
+        const includePrivate = url.searchParams.get("includePrivate") !== "false";
+        const { token, isOwnPrivateData } = await resolveAccess(request, env, username, includePrivate);
 
         const cacheKey = `languages:${username}:${periodParam ?? "all"}:${isOwnPrivateData ? "private" : "public"}`;
         const cached = await getCached<any>(env, cacheKey);
@@ -157,7 +159,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             });
         }
 
-        const { token, isOwnPrivateData } = await resolveAccess(request, env, username);
+        const includePrivate = url.searchParams.get("includePrivate") !== "false";
+        const { token, isOwnPrivateData } = await resolveAccess(request, env, username, includePrivate);
 
         const cacheKey = `achievements:${username}:${isOwnPrivateData ? "private" : "public"}`;
         const cached = await getCached<any>(env, cacheKey);
@@ -237,7 +240,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             });
         }
 
-        const { token, isOwnPrivateData } = await resolveAccess(request, env, username);
+        const includePrivate = url.searchParams.get("includePrivate") !== "false";
+        const { token, isOwnPrivateData } = await resolveAccess(request, env, username, includePrivate);
 
         const year = yearParam ? parseInt(yearParam, 10) : undefined;
         const cacheKey = `recap:${type}:${username}${year ? `:${year}` : ""}:${isOwnPrivateData ? "private" : "public"}`;

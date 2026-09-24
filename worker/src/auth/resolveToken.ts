@@ -8,7 +8,16 @@ export interface ResolvedAccess {
     isOwnPrivateData: boolean;
 }
 
-export async function resolveAccess(request: Request, env: Env, requestedUsername: string): Promise<ResolvedAccess> {
+export async function resolveAccess(
+    request: Request, 
+    env: Env, 
+    requestedUsername: string,
+    includePrivate: boolean,
+): Promise<ResolvedAccess> {
+    if (!includePrivate) {
+        return { token: env.GITHUB_TOKEN, isOwnPrivateData: false };
+    }
+
     const sessionId = getCookie(request, SESSION_COOKIE_NAME);
     const session = sessionId ? await getSession(env, sessionId) : null;
 

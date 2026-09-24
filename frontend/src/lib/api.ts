@@ -103,25 +103,35 @@ export const api = {
     getUser: (username: string) =>
         apiFetch<GitHubUser>(`/api/user?username=${encodeURIComponent(username)}`),
 
-    getStats: (username: string, period: Period = "30d") =>
+    getStats: (username: string, period: Period = "30d", includePrivate = true) =>
         apiFetch<Stats>(
-            `/api/stats?username=${encodeURIComponent(username)}&period=${period}`
+            `/api/stats?username=${encodeURIComponent(username)}&period=${period}${
+                includePrivate ? "" : "&includePrivate=false"
+            }`
         ),
 
-    getLanguages: (username: string, period?: Period) =>
+    getLanguages: (username: string, period?: Period, includePrivate = true) =>
         apiFetch<LanguageStats>(
-            `/api/languages?username=${encodeURIComponent(username)}${period ? `&period=${period}` : ""}`
+            `/api/languages?username=${encodeURIComponent(username)}${
+                period ? `&period=${period}` : ""
+            }${
+                includePrivate ? "" : "&includePrivate=false"
+            }`
         ),
 
-    getAchievements: (username: string) =>
+    getAchievements: (username: string, includePrivate = true) =>
         apiFetch<AchievementsResult>(
-            `/api/achievements?username=${encodeURIComponent(username)}`
+            `/api/achievements?username=${encodeURIComponent(username)}${
+                includePrivate ? "" : "&includePrivate=false"
+            }`
         ),
 
-    getRecap: (username: string, type: RecapType, year?: number) =>
+    getRecap: (username: string, type: RecapType, year?: number, includePrivate = true) =>
         apiFetch<Recap>(
             `/api/recap?username=${encodeURIComponent(username)}&type=${type}${
                 year ? `&year=${year}` : ""
+            }${
+                includePrivate ? "" : "&includePrivate=false"
             }`
         ),
 };
