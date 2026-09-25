@@ -1,11 +1,5 @@
 // just some reused constants
 
-// GH OAuth app only allows 1 registered callback url
-export const OAUTH_CALLBACK_URL = "https://gitnalysis-worker.rhylanmarsh.workers.dev/auth/callback";
-
-// where user is sent after a signin attempt
-export const FRONTEND_URL = "https://gitnalysis.pages.dev";
-
 // Origins allowed to make valid requests to the worker
 // Wildcard (*) CORS is not usable with cookies, so this has to be an explicit list
 export const ALLOWED_ORIGINS = [

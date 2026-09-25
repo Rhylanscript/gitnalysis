@@ -3,7 +3,7 @@ import { buildAuthorizeUrl, exchangeCodeForToken, fetchAuthenticatedUsername } f
 import { resolveAccess } from "./auth/resolveToken";
 import { createOAuthState, createSession, deleteSession, getSession, verifyAndConsumeOAuthState } from "./auth/session";
 import { getCached, setCached } from "./cache";
-import { FRONTEND_URL, SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "./config";
+import { SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "./config";
 import { corsHeadersFor, handlePreflight } from "./cors";
 import { fetchContributedNotOwnedCount, fetchContributions } from "./github/graphql";
 import { calculateAchievements } from "./stats/achievements";
@@ -302,7 +302,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
     if (url.pathname === "/auth/login") {
         const state = await createOAuthState(env);
-        const authorizeUrl = buildAuthorizeUrl(env.GITHUB_OAUTH_CLIENT_ID, state);
+        const authorizeUrl = buildAuthorizeUrl(env.GITHUB_OAUTH_CLIENT_ID, env.GITHUB_OAUTH_CALLBACK_URL, state);
         return Response.redirect(authorizeUrl, 302);
     }
 
@@ -324,7 +324,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             const username = await fetchAuthenticatedUsername(accessToken);
             const sessionId = await createSession(env, { accessToken, username });
 
-            const headers = new Headers({ Location: `${FRONTEND_URL}/${username}` });
+            const headers = new Headers({ Location: `${env.FRONTEND_URL}/${username}` });
             headers.append("Set-Cookie", buildSessionCookie(SESSION_COOKIE_NAME, sessionId, SESSION_TTL_SECONDS));
 
             return new Response(null, { status: 302, headers });
@@ -337,7 +337,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         const sessionId = getCookie(request, SESSION_COOKIE_NAME);
         if (sessionId) await deleteSession(env, sessionId);
 
-        const headers = new Headers({ Location: FRONTEND_URL });
+        const headers = new Headers({ Location: env.FRONTEND_URL });
         headers.append("Set-Cookie", buildExpiredSessionCookie(SESSION_COOKIE_NAME));
 
         return new Response(null, { status: 302, headers });

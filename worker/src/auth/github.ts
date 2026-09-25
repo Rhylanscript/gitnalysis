@@ -1,10 +1,9 @@
 import { Env } from "../types";
-import { OAUTH_CALLBACK_URL } from "../config";
 
-export function buildAuthorizeUrl(clientId: string, state: string): string {
+export function buildAuthorizeUrl(clientId: string, callbackUrl: string, state: string): string {
     const params = new URLSearchParams({
         client_id: clientId,
-        redirect_uri: OAUTH_CALLBACK_URL,
+        redirect_uri: callbackUrl,
         scope: "read:user",
         state,
     });
@@ -23,7 +22,7 @@ export async function exchangeCodeForToken(code: string, env: Env): Promise<stri
             client_id: env.GITHUB_OAUTH_CLIENT_ID,
             client_secret: env.GITHUB_OAUTH_CLIENT_SECRET,
             code,
-            redirect_uri: OAUTH_CALLBACK_URL,
+            redirect_uri: env.GITHUB_OAUTH_CALLBACK_URL,
         }),
     });
 
