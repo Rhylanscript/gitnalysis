@@ -337,10 +337,10 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         const sessionId = getCookie(request, SESSION_COOKIE_NAME);
         if (sessionId) await deleteSession(env, sessionId);
 
-        const headers = new Headers({ Location: env.FRONTEND_URL });
+        const headers = new Headers({ "Content-Type": "application/json" });
         headers.append("Set-Cookie", buildExpiredSessionCookie(SESSION_COOKIE_NAME));
 
-        return new Response(null, { status: 302, headers });
+        return new Response(JSON.stringify({ signedIn: false }), { headers });
     }
 
     if (url.pathname === "/auth/me") {
