@@ -25,11 +25,11 @@ export async function deleteSession(env: Env, sessionId: string): Promise<void> 
     await env.SESSIONS.delete(`session:${sessionId}`);
 }
 
-const STATE_TTL_SECONDS = 60 * 10;
+export const OAUTH_STATE_TTL_SECONDS = 60 * 10;
 
 export async function createOAuthState(env: Env): Promise<string> {
     const state = crypto.randomUUID();
-    await env.SESSIONS.put(`oauth_state:${state}`, "1", { expirationTtl: STATE_TTL_SECONDS });
+    await env.SESSIONS.put(`oauth_state:${state}`, "1", { expirationTtl: OAUTH_STATE_TTL_SECONDS });
     return state;
 }
 

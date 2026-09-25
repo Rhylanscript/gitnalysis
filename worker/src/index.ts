@@ -1,9 +1,9 @@
-import { buildExpiredSessionCookie, buildSessionCookie, getCookie } from "./auth/cookies";
+import { buildExpiredCookie, buildOAuthStateCookie, buildSessionCookie, getCookie } from "./auth/cookies";
 import { buildAuthorizeUrl, exchangeCodeForToken, fetchAuthenticatedUsername } from "./auth/github";
 import { resolveAccess } from "./auth/resolveToken";
-import { createOAuthState, createSession, deleteSession, getSession, verifyAndConsumeOAuthState } from "./auth/session";
+import { createOAuthState, createSession, deleteSession, getSession, OAUTH_STATE_TTL_SECONDS, verifyAndConsumeOAuthState } from "./auth/session";
 import { getCached, setCached } from "./cache";
-import { SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "./config";
+import { OAUTH_STATE_COOKIE_NAME, SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "./config";
 import { corsHeadersFor, handlePreflight } from "./cors";
 import { fetchContributedNotOwnedCount, fetchContributions } from "./github/graphql";
 import { calculateAchievements } from "./stats/achievements";
@@ -304,15 +304,24 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     if (url.pathname === "/auth/login") {
         const state = await createOAuthState(env);
         const authorizeUrl = buildAuthorizeUrl(env.GITHUB_OAUTH_CLIENT_ID, env.GITHUB_OAUTH_CALLBACK_URL, state);
-        return Response.redirect(authorizeUrl, 302);
+
+        const headers = new Headers({ Location: authorizeUrl });
+        headers.append("Set-Cookie", buildOAuthStateCookie(OAUTH_STATE_COOKIE_NAME, state, OAUTH_STATE_TTL_SECONDS));
+
+        return new Response(null, { status: 302, headers });
     }
 
     if (url.pathname === "/auth/callback") {
         const code = url.searchParams.get("code");
         const state = url.searchParams.get("state");
+        const cookieState = getCookie(request, OAUTH_STATE_COOKIE_NAME);
 
         if (!code || !state) {
             return new Response("Missing code or state", { status: 400 });
+        }
+
+        if (!cookieState || cookieState !== state) {
+            return new Response("State mismatch", { status: 400 });
         }
 
         const stateIsValid = await verifyAndConsumeOAuthState(env, state);
@@ -327,10 +336,12 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
             const headers = new Headers({ Location: `${env.FRONTEND_URL}/${username}` });
             headers.append("Set-Cookie", buildSessionCookie(SESSION_COOKIE_NAME, sessionId, SESSION_TTL_SECONDS));
+            headers.append("Set-Cookie", buildExpiredCookie(OAUTH_STATE_COOKIE_NAME));
 
             return new Response(null, { status: 302, headers });
         } catch (err) {
-            return new Response(`Sign in failed: ${String(err)}`, { status: 502 });
+            console.error("OAuth callback failed:", err);
+            return new Response("Sign in failed", { status: 502 });
         }
     }
 
@@ -339,7 +350,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         if (sessionId) await deleteSession(env, sessionId);
 
         const headers = new Headers({ "Content-Type": "application/json" });
-        headers.append("Set-Cookie", buildExpiredSessionCookie(SESSION_COOKIE_NAME));
+        headers.append("Set-Cookie", buildExpiredCookie(SESSION_COOKIE_NAME));
 
         return new Response(JSON.stringify({ signedIn: false }), { headers });
     }

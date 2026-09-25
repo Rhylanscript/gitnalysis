@@ -14,6 +14,10 @@ export function buildSessionCookie(name: string, value: string, maxAgeSeconds: n
     return `${name}=${value}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${maxAgeSeconds}`;
 }
 
-export function buildExpiredSessionCookie(name: string): string {
+export function buildOAuthStateCookie(name: string, value: string, maxAgeSeconds: number): string {
+    return `${name}=${value}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAgeSeconds}`;
+}
+
+export function buildExpiredCookie(name: string): string {
     return `${name}=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0`;
 }
