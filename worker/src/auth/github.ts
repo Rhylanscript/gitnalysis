@@ -4,7 +4,7 @@ export function buildAuthorizeUrl(clientId: string, callbackUrl: string, state: 
     const params = new URLSearchParams({
         client_id: clientId,
         redirect_uri: callbackUrl,
-        scope: "read:user",
+        scope: "read:user repo",
         state,
     });
 
