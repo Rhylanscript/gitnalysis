@@ -58,6 +58,7 @@ export interface Stats {
         topRepos: { name: string; count: number }[];
         activeDays: { active: number; total: number };
     };
+    isOwnPrivateData: boolean;
 }
 
 export interface LanguageStats {

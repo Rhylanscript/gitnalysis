@@ -121,7 +121,7 @@ export default function Dashboard() {
                                     <StatCard label="Repos" value={stats.totalRepositoriesWithContributedCommits} />
                                     <StatCard label="Current streak" value={stats.currentStreak} />
                                 </div>
-                                <PublicDataNote restrictedCount={stats.restrictedContributionsCount} />
+                                <PublicDataNote restrictedCount={stats.restrictedContributionsCount} isOwnPrivateData={stats.isOwnPrivateData} />
                                 <ActivityGraph weeks={stats.contributionCalendar.weeks} />
                                 <div className="mt-4">
                                     <PersonalRecords

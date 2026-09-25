@@ -132,7 +132,7 @@ export default function Recap() {
                             <div className="text-neutral-400">contributions</div>
                         </div>
 
-                        <PublicDataNote restrictedCount={data.restrictedContributionsCount} />
+                        <PublicDataNote restrictedCount={data.restrictedContributionsCount} isOwnPrivateData={data.isOwnPrivateData} />
 
                         <div className="mb-8 rounded-lg border border-neutral-800 bg-neutral-900 p-4">
                             <h2 className="mb-2 text-sm font-medium text-neutral-400">Activity breakdown</h2>

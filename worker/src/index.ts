@@ -95,7 +95,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
                 contributions.contributionCalendar.weeks,
                 contributions.commitContributionsByRepository,
             );
-            const result = { ...contributions, ...streaks, records };
+            const result = { ...contributions, ...streaks, records, isOwnPrivateData };
 
             await setCached(env, cacheKey, result);
 
@@ -284,8 +284,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
                 languages: languageStats.languages,
                 previous,
                 recapType: type, 
-                from, 
-                to 
+                from,
+                to,
+                isOwnPrivateData,
             };
 
             await setCached(env, cacheKey, result);
