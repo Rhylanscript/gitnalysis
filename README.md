@@ -157,8 +157,8 @@ Both halves deploy automatically on push to `main`, through two separate pipelin
 
 ## Known limitations
 
-- **Private data is opt in and limited in scope.** Signing in only unlocks your own aggregate private contribution counts (`read:user` scope) - not private repo names, languages, or content. Every page that shows contribution counts also shows how many private contributions aren't reflected when you're not signed in.
-- **Language stats are an estimate**, computed from current repo language bytesplits (GitHub's `/languages` endpoint), not per commit diffing, capped at the 30 most recently active repos to stay within Cloudflare 50 subrequest per invocation limit, and currently public-repos-only regardless of sign-in status.
+- **Private data is opt in and limited in scope.** Signing in only unlocks your own aggregate private contribution counts (`read:user repo` scope) - not private repo names or content. Every page that shows contribution counts also shows how many private contributions aren't reflected when you're not signed in.
+- **Language stats are an estimate**, computed from current repo language bytesplits (GitHub's `/languages` endpoint), not per commit diffing, capped at the 30 most recently active repos to stay within Cloudflare 50 subrequest per invocation limit
 - **"All time" data loops year by year**, since GitHub's GraphQL contribution data is limited to ~1 year per query.
 - **Commit timestamps** reflect the committers local machine clock (or UTC if unset), any time of day feature would need to be labeled as approximate, which is part of why coding habits/time of day stats arent implemented yet (see below)
 - **Local dev auth relies on the browser's `localhost` secure-context exemption** for the session/OAuth-state cookies (`Secure` cookies work over plain `http://localhost` in modern browsers, but not on other non-HTTPS hosts). If you ever run this outside Cloudflare's HTTPS terminated production environment or `localhost` dev, e.g. a plain-HTTP LAN deployment, cookie-based auth would need reworking.
