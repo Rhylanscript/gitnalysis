@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import SignInButton from "../components/SignInButton";
 
 interface Square {
     x: number;
@@ -59,6 +60,9 @@ export default function Landing() {
 
     return (
         <div className="gtn-landing relative min-h-screen overflow-hidden bg-neutral-950 text-neutral-100">
+            <div className="absolute right-6 top-6 z-20">
+                <SignInButton />
+            </div>
             <div className="square-field pointer-events-none absolute inset-0 opacity-[0.1] lg:inset-auto lg:right-[6%] lg:top-1/2 lg:h-88 lg:w-88 lg:-translate-y-1/2 lg:opacity-100">
                 {SQUARES.map((sq, i) => (
                     <div

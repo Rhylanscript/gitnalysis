@@ -7,13 +7,13 @@ interface Repo {
     pushed_at: string;
 }
 
-export async function fetchUserRepos(username: string, env: Env): Promise<Repo[]> {
+export async function fetchUserRepos(username: string, token: string): Promise<Repo[]> {
     const response = await fetch(
         `https://api.github.com/users/${username}/repos?per_page=100&sort=pushed`,
         {
             headers: {
                 "User-Agent": "gitnalysis",
-                Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+                Authorization: `Bearer ${token}`,
                 Accept: "application/vnd.github+json",
             },
         }
@@ -28,12 +28,12 @@ export async function fetchUserRepos(username: string, env: Env): Promise<Repo[]
 
 export async function fetchRepoLanguages(
     fullname: string,
-    env: Env,
+    token: string,
 ): Promise<Record<string, number>> {
     const response = await fetch(`https://api.github.com/repos/${fullname}/languages`, {
         headers: {
             "User-Agent": "gitnalysis",
-            Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+            Authorization: `Bearer ${token}`,
             Accept: "application/vnd.github+json",
         },
     });

@@ -3,6 +3,14 @@ main = "src/index.ts"
 compatibility_date = "2026-09-01"
 
 [vars]
+GITHUB_OAUTH_CLIENT_ID = "Ov23li1ifsA0K6BGkIXk"
+GITHUB_OAUTH_CALLBACK_URL = "https://gitnalysis-worker.rhylanmarsh.workers.dev/auth/callback"
+FRONTEND_URL = "https://gitnalysis.pages.dev"
+
 [[kv_namespaces]]
 binding = "STATS_CACHE"
 id = "73d9176e2ac24f2ca06b1cf9173b0546"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "a725e2f7b3aa4028ab4249bd324b63a8"

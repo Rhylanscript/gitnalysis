@@ -10,11 +10,17 @@ import PersonalRecords from "../components/PersonalRecords";
 import LanguageChart from "../components/LanguageChart";
 import Sidebar from "../components/Sidebar";
 import { ActivityGraphSkeleton, LanguageChartSkeleton, SidebarSkeleton, StatCardSkeleton } from "../components/Skeletons";
-import { Home } from "lucide-react";
+import { Eye, EyeOff, Home } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+import SignInButton from "../components/SignInButton";
 
 export default function Dashboard() {
     const { username } = useParams<{ username: string }>();
     const [period, setPeriod] = useState<Period>("30d");
+
+    const { signedIn, username: authUsername } = useAuth();
+    const isOwnProfile = signedIn && authUsername?.toLowerCase() === username?.toLowerCase();
+    const [includePrivate, setIncludePrivate] = useState(true);
 
     const { data: user, isLoading: userLoading, error: userError } = useQuery({
         queryKey: ["user", username],
@@ -23,20 +29,20 @@ export default function Dashboard() {
     });
 
     const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
-        queryKey: ["stats", username, period],
-        queryFn: () => api.getStats(username!, period),
+        queryKey: ["stats", username, period, isOwnProfile && includePrivate],
+        queryFn: () => api.getStats(username!, period, !isOwnProfile || includePrivate),
         enabled: !!username,
     });
 
     const { data: languageStats, isLoading: languagesLoading } = useQuery({
-        queryKey: ["languages", username, period],
-        queryFn: () => api.getLanguages(username!, period),
+        queryKey: ["languages", username, period, isOwnProfile && includePrivate],
+        queryFn: () => api.getLanguages(username!, period, !isOwnProfile || includePrivate),
         enabled: !!username,
     });
 
     const { data: achievementsData } = useQuery({
-        queryKey: ["achievements", username],
-        queryFn: () => api.getAchievements(username!),
+        queryKey: ["achievements", username, isOwnProfile && includePrivate],
+        queryFn: () => api.getAchievements(username!, !isOwnProfile || includePrivate),
         enabled: !!username,
     });
 
@@ -66,7 +72,7 @@ export default function Dashboard() {
                 )}
 
                 <div className="min-w-0 flex-1">
-                    <div className="mb-6 flex justify-end">
+                    <div className="mb-6 flex justify-end gap-3 items-center">
                         <Link
                             to="/"
                             className="mr-auto flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-100"
@@ -74,6 +80,20 @@ export default function Dashboard() {
                             <Home size={16} />
                             <span className="hidden sm:inline">Home</span>
                         </Link>
+
+                        {isOwnProfile && (
+                            <button
+                                onClick={() => setIncludePrivate((v) => !v)}
+                                className="flex items-center gap-1.5 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-sm text-neutral-400 transition-colors hover:text-neutral-100 cursor-pointer"
+                            >
+                                {includePrivate ? <Eye size={16} /> : <EyeOff size={16} />}
+                                <span className="hidden sm:inline">
+                                    {includePrivate ? "Including private" : "Public view only"}
+                                </span>
+                            </button>
+                        )}
+
+                        <SignInButton />
                         <PeriodSelector value={period} onChange={setPeriod} />
                     </div>
 
@@ -101,7 +121,7 @@ export default function Dashboard() {
                                     <StatCard label="Repos" value={stats.totalRepositoriesWithContributedCommits} />
                                     <StatCard label="Current streak" value={stats.currentStreak} />
                                 </div>
-                                <PublicDataNote restrictedCount={stats.restrictedContributionsCount} />
+                                <PublicDataNote restrictedCount={stats.restrictedContributionsCount} isOwnPrivateData={stats.isOwnPrivateData} />
                                 <ActivityGraph weeks={stats.contributionCalendar.weeks} />
                                 <div className="mt-4">
                                     <PersonalRecords

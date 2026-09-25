@@ -6,8 +6,11 @@ import PersonalRecords from "../components/PersonalRecords";
 import LanguageChart from "../components/LanguageChart";
 import PublicDataNote from "../components/PublicDataNote";
 import { ActivityRadarSkeleton, LanguageChartSkeleton, PersonalRecordsSkeleton, RecapGridSkeleton, RecapHeroSkeleton } from "../components/Skeletons";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSlidingIndicator } from "../hooks/useSlidingIndicator";
+import { useAuth } from "../hooks/useAuth";
+import SignInButton from "../components/SignInButton";
+import { Eye, EyeOff } from "lucide-react";
 
 const TABS: { type: RecapType; label: string }[] = [
     { type: "week", label: "Week" },
@@ -29,12 +32,16 @@ export default function Recap() {
     const currentYear = new Date().getFullYear();
     const defaultCompletedYear = currentYear - 1;
     const inProgress = recapType === "year" && (parsedYear ?? defaultCompletedYear) === currentYear;
+    
+    const { signedIn, username: authUsername } = useAuth();
+    const isOwnProfile = signedIn && authUsername?.toLowerCase() === username?.toLowerCase();
+    const [includePrivate, setIncludePrivate] = useState(true);
 
     const { containerRef, indicator, register } = useSlidingIndicator(recapType);
 
     const { data, isLoading, error } = useQuery({
-        queryKey: ["recap", username, recapType, parsedYear],
-        queryFn: () => api.getRecap(username!, recapType, parsedYear),
+        queryKey: ["recap", username, recapType, parsedYear, isOwnProfile && includePrivate],
+        queryFn: () => api.getRecap(username!, recapType, parsedYear, !isOwnProfile || includePrivate),
         enabled: !!username && !!recapType,
     });
 
@@ -51,6 +58,21 @@ export default function Recap() {
                 <Link to={`/${username}`} className="text-sm text-neutral-500 hover:text-neutral-300">
                     Back to dashboard
                 </Link>
+
+                <div className="mt-2 flex items-center justify-end gap-3">
+                    {isOwnProfile && (
+                        <button
+                            onClick={() => setIncludePrivate((v) => !v)}
+                            className="flex items-center gap-1.5 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-sm text-neutral-400 transition-colors hover:text-neutral-100 cursor-pointer"
+                        >
+                            {includePrivate ? <Eye size={16} /> : <EyeOff size={16} />}
+                            <span className="hidden sm:inline">
+                                {includePrivate ? "Including private" : "Public view only"}
+                            </span>
+                        </button>
+                    )}
+                    <SignInButton />
+                </div>
 
                 <div ref={containerRef} className="relative mt-4 mb-4 flex gap-1 rounded-md bg-neutral-900 p-1">
                     {indicator && (
@@ -132,7 +154,7 @@ export default function Recap() {
                             <div className="text-neutral-400">contributions</div>
                         </div>
 
-                        <PublicDataNote restrictedCount={data.restrictedContributionsCount} />
+                        <PublicDataNote restrictedCount={data.restrictedContributionsCount} isOwnPrivateData={data.isOwnPrivateData} />
 
                         <div className="mb-8 rounded-lg border border-neutral-800 bg-neutral-900 p-4">
                             <h2 className="mb-2 text-sm font-medium text-neutral-400">Activity breakdown</h2>

@@ -1,5 +1,3 @@
-import { Env } from "../types";
-
 const CONTRIBUTIONS_QUERY = `
     query($username: String!, $from: DateTime!, $to: DateTime!) {
         user(login: $username) {
@@ -37,14 +35,14 @@ export async function fetchContributions(
     username: string,
     from: string,
     to: string,
-    env: Env,
+    token: string,
 ) {
     const response = await fetch("https://api.github.com/graphql", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "User-Agent": "gitnalysis",
-            Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+            Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
             query: CONTRIBUTIONS_QUERY,
@@ -75,13 +73,13 @@ const CONTRIBUTED_REPOS_QUERY = `
     }
 `;
 
-export async function fetchContributedNotOwnedCount(username: string, env: Env): Promise<number> {
+export async function fetchContributedNotOwnedCount(username: string, token: string): Promise<number> {
     const response = await fetch("https://api.github.com/graphql", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "User-Agent": "gitnalysis",
-            Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+            Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
             query: CONTRIBUTED_REPOS_QUERY,
