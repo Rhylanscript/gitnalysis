@@ -38,6 +38,7 @@ export default function SignInButton() {
     return (
         <button
             onClick={signIn}
+            title="Sign in to include your own private contributions in your stats"
             className="flex items-center gap-1.5 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-sm font-medium text-neutral-100 transition-colors hover:bg-neutral-800 cursor-pointer"
         >
             <GitHubIcon size={16} />
