@@ -13,9 +13,10 @@ export interface LanguageStatsResult extends LanguageStats {
 export async function getLanguageStats(
     username: string, 
     token: string,
+    useAuthenticatedEndpoint: boolean,
     sinceDate?: string,
 ): Promise<LanguageStatsResult> {
-    const repos = await fetchUserRepos(username, token);
+    const repos = await fetchUserRepos(username, token, useAuthenticatedEndpoint);
     let candidateRepos = repos.filter((r) => !r.fork);
 
     if (sinceDate) {

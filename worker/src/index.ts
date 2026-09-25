@@ -134,7 +134,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
         try {
             const { from } = periodParam ? periodToRange(periodParam) : { from: undefined };
-            const stats = await getLanguageStats(username, token, from);
+            const stats = await getLanguageStats(username, token, isOwnPrivateData, from);
             const result = { ...stats, estimate: true, period: periodParam ?? "all" };
 
             await setCached(env, cacheKey, result);
@@ -176,7 +176,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             const [contributions, contributedNotOwnedCount, languageStats] = await Promise.all([
                 fetchContributions(username, from, to, token),
                 fetchContributedNotOwnedCount(username, token),
-                getLanguageStats(username, token),
+                getLanguageStats(username, token, isOwnPrivateData),
             ]);
 
             const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
@@ -260,7 +260,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             const [contributions, previousContributions, languageStats] = await Promise.all([
                 fetchContributions(username, from, to, token),
                 fetchContributions(username, prevFrom, prevTo, token),
-                getLanguageStats(username, token, from),
+                getLanguageStats(username, token, isOwnPrivateData, from),
             ]);
             const streaks = calculateStreaks(contributions.contributionCalendar.weeks);
             const records = calculateRecords(

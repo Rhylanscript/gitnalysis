@@ -7,18 +7,19 @@ interface Repo {
     pushed_at: string;
 }
 
-export async function fetchUserRepos(username: string, token: string): Promise<Repo[]> {
-    const response = await fetch(
-        `https://api.github.com/users/${username}/repos?per_page=100&sort=pushed`,
-        {
-            headers: {
-                "User-Agent": "gitnalysis",
-                Authorization: `Bearer ${token}`,
-                Accept: "application/vnd.github+json",
-            },
-        }
-    );
-    
+export async function fetchUserRepos(username: string, token: string, useAuthenticatedEndpoint: boolean): Promise<Repo[]> {
+    const url = useAuthenticatedEndpoint
+        ? "https://api.github.com/user/repos?per_page=100&sort=pushed&affiliation=owner"
+        : `https://api.github.com/users/${username}/repos?per_page=100&sort=pushed`;
+
+    const response = await fetch(url, {
+        headers: {
+            "User-Agent": "gitnalysis",
+            Authorization: `Bearer ${token}`,
+            Accept: "application/vnd.github+json",
+        },
+    });
+
     if (!response.ok) {
         throw new Error(`GitHub REST error fetching Repos: ${response.status}`);
     }
