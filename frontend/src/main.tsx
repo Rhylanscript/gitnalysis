@@ -4,6 +4,9 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "./index.css";
+import { captureSessionFromUrl } from "./lib/sessionToken";
+
+captureSessionFromUrl();
 
 const queryClient = new QueryClient();
 

@@ -1,9 +1,10 @@
-import { buildExpiredCookie, buildOAuthStateCookie, buildSessionCookie, getCookie } from "./auth/cookies";
+import { getBearerToken } from "./auth/bearer";
+import { buildExpiredCookie, buildOAuthStateCookie, getCookie } from "./auth/cookies";
 import { buildAuthorizeUrl, exchangeCodeForToken, fetchAuthenticatedUsername } from "./auth/github";
 import { resolveAccess } from "./auth/resolveToken";
 import { createOAuthState, createSession, deleteSession, getSession, OAUTH_STATE_TTL_SECONDS, verifyAndConsumeOAuthState } from "./auth/session";
 import { getCached, setCached } from "./cache";
-import { OAUTH_STATE_COOKIE_NAME, SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "./config";
+import { OAUTH_STATE_COOKIE_NAME, SESSION_TTL_SECONDS } from "./config";
 import { corsHeadersFor, handlePreflight } from "./cors";
 import { fetchContributedNotOwnedCount, fetchContributions } from "./github/graphql";
 import { calculateAchievements } from "./stats/achievements";
@@ -334,9 +335,11 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             const username = await fetchAuthenticatedUsername(accessToken);
             const sessionId = await createSession(env, { accessToken, username });
 
-            const headers = new Headers({ Location: `${env.FRONTEND_URL}/${username}` });
-            headers.append("Set-Cookie", buildSessionCookie(SESSION_COOKIE_NAME, sessionId, SESSION_TTL_SECONDS));
-            headers.append("Set-Cookie", buildExpiredCookie(OAUTH_STATE_COOKIE_NAME));
+            const redirectUrl = new URL(`${env.FRONTEND_URL}/${username}`);
+            redirectUrl.searchParams.set("session", sessionId);
+
+            const headers = new Headers({ Location: redirectUrl.toString() });
+            headers.append("Set-Cookie", buildExpiredCookie(OAUTH_STATE_COOKIE_NAME)); // one-time use, clean up either way
 
             return new Response(null, { status: 302, headers });
         } catch (err) {
@@ -346,17 +349,16 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     }
 
     if (url.pathname === "/auth/logout") {
-        const sessionId = getCookie(request, SESSION_COOKIE_NAME);
+        const sessionId = getBearerToken(request);
         if (sessionId) await deleteSession(env, sessionId);
 
-        const headers = new Headers({ "Content-Type": "application/json" });
-        headers.append("Set-Cookie", buildExpiredCookie(SESSION_COOKIE_NAME));
-
-        return new Response(JSON.stringify({ signedIn: false }), { headers });
+        return new Response(JSON.stringify({ signedIn: false }), {
+            headers: { "Content-Type": "application/json" },
+        });
     }
 
     if (url.pathname === "/auth/me") {
-        const sessionId = getCookie(request, SESSION_COOKIE_NAME);
+        const sessionId = getBearerToken(request);
         const session = sessionId ? await getSession(env, sessionId) : null;
 
         return new Response(

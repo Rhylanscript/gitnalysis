@@ -7,6 +7,5 @@ export const ALLOWED_ORIGINS = [
     "http://localhost:5173",        // (vite dev server)
 ];
 
-export const SESSION_COOKIE_NAME = "gitnalysis_session";
 export const OAUTH_STATE_COOKIE_NAME = "gitnalysis_oauth_state";
 export const SESSION_TTL_SECONDS = 60 * 60 * 7 * 24;
