@@ -6,10 +6,10 @@ export function periodToRange(period: Period): { from: string; to: string } {
 
     switch (period) {
         case "7d":
-            from.setUTCDate(from.getUTCDate() - 7);
+            from.setUTCDate(from.getUTCDate() - 6);
             break;
         case "30d":
-            from.setUTCDate(from.getUTCDate() - 30);
+            from.setUTCDate(from.getUTCDate() - 29);
             break;
         case "3mo":
             from.setUTCMonth(from.getUTCMonth() - 3);
