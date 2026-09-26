@@ -1,3 +1,5 @@
+import { getSessionToken } from "./sessionToken";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 if (!API_URL) {
@@ -5,7 +7,10 @@ if (!API_URL) {
 }
 
 async function apiFetch<T>(path: string): Promise<T> {
-    const response = await fetch(`${API_URL}${path}`, { credentials: "include" });
+    const token = getSessionToken();
+    const response = await fetch(`${API_URL}${path}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
 
     if (!response.ok) {
         const body = await response.json().catch(() => ({}));

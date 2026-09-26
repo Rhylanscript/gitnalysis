@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getSessionToken, clearSessionToken } from "../lib/sessionToken";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -8,8 +9,11 @@ interface AuthState {
 }
 
 async function fetchAuthState(): Promise<AuthState> {
+    const token = getSessionToken();
+    if (!token) return { signedIn: false };
+
     const response = await fetch(`${API_URL}/auth/me`, {
-        credentials: "include",
+        headers: { Authorization: `Bearer ${token}` },
     });
     return response.json();
 }
@@ -27,7 +31,13 @@ export function useAuth() {
     }
 
     async function signOut() {
-        await fetch(`${API_URL}/auth/logout`, { credentials: "include" });
+        const token = getSessionToken();
+        if (token) {
+            await fetch(`${API_URL}/auth/logout`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+        }
+        clearSessionToken();
         queryClient.invalidateQueries({ queryKey: ["auth"] });
     }
 
