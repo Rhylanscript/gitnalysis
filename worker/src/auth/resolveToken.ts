@@ -1,7 +1,6 @@
 import { Env } from "../types";
 import { getSession } from "./session";
-import { getCookie } from "./cookies";
-import { SESSION_COOKIE_NAME } from "../config";
+import { getBearerToken } from "./bearer";
 
 export interface ResolvedAccess {
     token: string;
@@ -9,8 +8,8 @@ export interface ResolvedAccess {
 }
 
 export async function resolveAccess(
-    request: Request, 
-    env: Env, 
+    request: Request,
+    env: Env,
     requestedUsername: string,
     includePrivate: boolean,
 ): Promise<ResolvedAccess> {
@@ -18,7 +17,7 @@ export async function resolveAccess(
         return { token: env.GITHUB_TOKEN, isOwnPrivateData: false };
     }
 
-    const sessionId = getCookie(request, SESSION_COOKIE_NAME);
+    const sessionId = getBearerToken(request);
     const session = sessionId ? await getSession(env, sessionId) : null;
 
     if (session && session.username.toLowerCase() === requestedUsername.toLowerCase()) {

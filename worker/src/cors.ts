@@ -15,6 +15,6 @@ export function corsHeadersFor(request: Request): Headers {
 export function handlePreflight(request: Request): Response {
     const headers = corsHeadersFor(request);
     headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
-    headers.set("Access-Control-Allow-Headers", "Content-Type");
+    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
     return new Response(null, { status: 204, headers });
 }

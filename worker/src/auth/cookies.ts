@@ -10,10 +10,6 @@ export function getCookie(request: Request, name: string): string | null {
     return null;
 }
 
-export function buildSessionCookie(name: string, value: string, maxAgeSeconds: number): string {
-    return `${name}=${value}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${maxAgeSeconds}`;
-}
-
 export function buildOAuthStateCookie(name: string, value: string, maxAgeSeconds: number): string {
     return `${name}=${value}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAgeSeconds}`;
 }
