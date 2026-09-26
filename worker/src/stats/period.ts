@@ -2,26 +2,27 @@ export type Period = "7d" | "30d" | "3mo" | "6mo" | "1yr";
 
 export function periodToRange(period: Period): { from: string; to: string } {
     const to = new Date();
-    const from = new Date();
+    const from = new Date(to);
 
     switch (period) {
         case "7d":
-            from.setDate(from.getDate() - 7);
+            from.setUTCDate(from.getUTCDate() - 6);
             break;
         case "30d":
-            from.setDate(from.getDate() - 30);
+            from.setUTCDate(from.getUTCDate() - 29);
             break;
         case "3mo":
-            from.setMonth(from.getMonth() - 3);
+            from.setUTCMonth(from.getUTCMonth() - 3);
             break;
         case "6mo":
-            from.setMonth(from.getMonth() - 6);
+            from.setUTCMonth(from.getUTCMonth() - 6);
             break;
         case "1yr":
-            from.setFullYear(from.getFullYear() - 1);
+            from.setUTCFullYear(from.getUTCFullYear() - 1);
             break;
     }
 
+    from.setUTCHours(0, 0, 0, 0);
     return { from: from.toISOString(), to: to.toISOString() };
 }
 
