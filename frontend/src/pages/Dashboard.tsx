@@ -66,7 +66,7 @@ export default function Dashboard() {
                 ) : (
                     user && (
                         <div className="fade-up">
-                            <Sidebar user={user} achievements={achievementsData?.achievements} />
+                            <Sidebar user={user} achievements={achievementsData?.achievements} showOrgs={isOwnProfile} />
                         </div>
                     )
                 )}
