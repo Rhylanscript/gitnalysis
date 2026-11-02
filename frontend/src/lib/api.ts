@@ -6,6 +6,15 @@ if (!API_URL) {
     throw new Error("VITE_API_URL is not set — check your .env file");
 }
 
+export class ApiError extends Error {
+    code?: string;
+
+    constructor(message: string, code?: string) {
+        super(message);
+        this.code = code;
+    }
+}
+
 async function apiFetch<T>(path: string): Promise<T> {
     const token = getSessionToken();
     const response = await fetch(`${API_URL}${path}`, {
@@ -14,7 +23,7 @@ async function apiFetch<T>(path: string): Promise<T> {
 
     if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body.error ?? `Request failed: ${response.status}`);
+        throw new ApiError(body.error ?? `Request failed: ${response.status}`, body.code);
     }
 
     return response.json();
@@ -105,6 +114,36 @@ export interface Recap extends Stats {
     previous: RecapComparisonMetrics;
 }
 
+export interface OrgSummary {
+    login: string;
+    name: string | null;
+    avatarUrl: string;
+}
+
+export interface OrgMemberStats {
+    login: string;
+    name: string | null;
+    avatarUrl: string;
+    commits: number;
+    pullRequests: number;
+    issues: number;
+    reviews: number;
+    total: number;
+}
+
+export interface OrgLeaderboard {
+    org: OrgSummary;
+    members: OrgMemberStats[];
+    totals: { commits: number; pullRequests: number; issues: number; reviews: number; total: number };
+    activeMembers: number;
+    membersAnalysed: number;
+    totalMembers: number;
+    topRepos: { name: string; commits: number }[];
+    period: Period;
+    from: string;
+    to: string;
+}
+
 export const api = {
     getUser: (username: string) =>
         apiFetch<GitHubUser>(`/api/user?username=${encodeURIComponent(username)}`),
@@ -140,6 +179,11 @@ export const api = {
                 includePrivate ? "" : "&includePrivate=false"
             }`
         ),
+
+    getOrgs: () => apiFetch<{ orgs: OrgSummary[] }>("/api/orgs"),
+
+    getOrgLeaderboard: (org: string, period: Period = "30d") =>
+        apiFetch<OrgLeaderboard>(`/api/org/leaderboard?org=${encodeURIComponent(org)}&period=${period}`),
 };
 
 export const PERIODS: { value: Period; label: string }[] = [

@@ -107,6 +107,13 @@ Gitnalysis has two tiers of access, and which one you get depends only on whethe
 - **Anonymous / viewing someone else's profile** - always public data only, using a shared readonly PAT. No login is required for this.
 - **Signed in and viewing your own profile** - your own private contributions are additionally counted toward your stats, using a GitHub OAuth token scoped to `read:user`. This only unlocks your own aggregate contribution *counts* - it does not grant Gitnalysis read access to your private repository contents (that would need a broader `repo` scope, which this app deliberately doesn't request).
 
+Signing in also requests `read:org`, which unlocks two org features on your own profile:
+
+- **Org repos in your language stats** - org repos you've actually committed to in the period are included alongside your own (repos you never touch are left out so they don't skew the breakdown).
+- **Org leaderboards** - for any organisation you're a member of, a ranked list of members by commits, PRs, reviews and issues, plus org totals and most active repos.
+
+If you signed in before `read:org` was added, sign out and back in to grant it. Orgs that restrict third-party OAuth apps need an owner to approve the app before their private data shows up.
+
 Signing in never affects what anyone else sees when they look up your username, and your own token is never used to view anyone else's private data.
 
 Sessions are stored serverside (Cloudflare KV) behind an `HttpOnly` cookie, your GitHub token is never exposed to frontend JavaScript.
@@ -137,6 +144,8 @@ All routes are served by the Worker and proxy/aggregate GitHub data. Every respo
 | `GET /api/languages?username=&period=&includePrivate=`                  | Language breakdown (optionally period filtered)                                       |
 | `GET /api/achievements?username=&includePrivate=`                       | Achievement badges, computed off a fixed 1-year lookback                              |
 | `GET /api/recap?username=&type=week\|month\|year&year=&includePrivate=` | Full recap: stats, records, languages, and previous period comparison                 |
+| `GET /api/orgs`                                                         | Organisations the signed-in user belongs to (sign-in required)                        |
+| `GET /api/org/leaderboard?org=&period=`                                 | Member leaderboard, totals, and most active repos for one of your orgs (sign-in required) |
 | `GET /auth/login`                                                       | Redirects to GitHub's OAuth consent screen                                            |
 | `GET /auth/callback`                                                    | GitHub redirects here after consent; sets the session cookie                          |
 | `GET /auth/logout`                                                      | Clears the current session                                                            |
@@ -159,6 +168,7 @@ Both halves deploy automatically on push to `main`, through two separate pipelin
 
 - **Private data is opt in and limited in scope.** Signing in only unlocks your own aggregate private contribution counts (`read:user repo` scope) - not private repo names or content. Every page that shows contribution counts also shows how many private contributions aren't reflected when you're not signed in.
 - **Language stats are an estimate**, computed from current repo language bytesplits (GitHub's `/languages` endpoint), not per commit diffing, capped at the 30 most recently active repos to stay within Cloudflare 50 subrequest per invocation limit
+- **Org leaderboards only count members**, not outside collaborators, and only activity in repos the viewer can see. Very large orgs are capped at the first 200 members to stay within the subrequest limit.
 - **"All time" data loops year by year**, since GitHub's GraphQL contribution data is limited to ~1 year per query.
 - **Commit timestamps** reflect the committers local machine clock (or UTC if unset), any time of day feature would need to be labeled as approximate, which is part of why coding habits/time of day stats arent implemented yet (see below)
 - **Local dev auth relies on the browser's `localhost` secure-context exemption** for the session/OAuth-state cookies (`Secure` cookies work over plain `http://localhost` in modern browsers, but not on other non-HTTPS hosts). If you ever run this outside Cloudflare's HTTPS terminated production environment or `localhost` dev, e.g. a plain-HTTP LAN deployment, cookie-based auth would need reworking.

@@ -7,6 +7,7 @@ import { getCached, setCached } from "./cache";
 import { OAUTH_STATE_COOKIE_NAME, SESSION_TTL_SECONDS } from "./config";
 import { corsHeadersFor, handlePreflight } from "./cors";
 import { fetchContributedNotOwnedCount, fetchContributions } from "./github/graphql";
+import { fetchOrgLeaderboard, fetchViewerOrgs, MissingScopeError, OrgAccessError } from "./github/orgs";
 import { calculateAchievements } from "./stats/achievements";
 import { calculateDayOfWeekSplit } from "./stats/dayOfWeek";
 import { getLanguageStats } from "./stats/getLanguageStats";
@@ -302,6 +303,57 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
         }
     }
 
+    if (url.pathname === "/api/orgs") {
+        const session = await getSessionFromRequest(request, env);
+        if (!session) return signInRequired();
+
+        try {
+            const orgs = await fetchViewerOrgs(session.accessToken);
+            return new Response(JSON.stringify({ orgs }), {
+                headers: { "Content-Type": "application/json" },
+            });
+        } catch (err) {
+            return orgErrorResponse(err);
+        }
+    }
+
+    if (url.pathname === "/api/org/leaderboard") {
+        const org = url.searchParams.get("org");
+        const period = (url.searchParams.get("period") ?? "30d") as Period;
+
+        if (!org) {
+            return new Response(JSON.stringify({ error: "org required" }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            });
+        }
+
+        const session = await getSessionFromRequest(request, env);
+        if (!session) return signInRequired();
+
+        // per viewer, since results depend on their access
+        const cacheKey = `org:${org.toLowerCase()}:${period}:${session.username.toLowerCase()}`;
+        const cached = await getCached<any>(env, cacheKey);
+        if (cached) {
+            return new Response(JSON.stringify(cached), {
+                headers: { "Content-Type": "application/json", "X-Cache": "HIT" },
+            });
+        }
+
+        try {
+            const { from, to } = periodToRange(period);
+            const leaderboard = await fetchOrgLeaderboard(org, from, to, session.accessToken);
+            const result = { ...leaderboard, period, from, to };
+
+            await setCached(env, cacheKey, result);
+            return new Response(JSON.stringify(result), {
+                headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
+            });
+        } catch (err) {
+            return orgErrorResponse(err);
+        }
+    }
+
     if (url.pathname === "/auth/login") {
         const state = await createOAuthState(env);
         const authorizeUrl = buildAuthorizeUrl(env.GITHUB_OAUTH_CLIENT_ID, env.GITHUB_OAUTH_CALLBACK_URL, state);
@@ -368,4 +420,35 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     }
 
     return new Response("Not found", { status: 404 });
+}
+
+async function getSessionFromRequest(request: Request, env: Env) {
+    const sessionId = getBearerToken(request);
+    return sessionId ? await getSession(env, sessionId) : null;
+}
+
+function signInRequired(): Response {
+    return new Response(JSON.stringify({ error: "Sign in to view your organisations", code: "sign_in_required" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+    });
+}
+
+function orgErrorResponse(err: unknown): Response {
+    if (err instanceof MissingScopeError) {
+        return new Response(JSON.stringify({ error: err.message, code: "missing_scope" }), {
+            status: 403,
+            headers: { "Content-Type": "application/json" },
+        });
+    }
+    if (err instanceof OrgAccessError) {
+        return new Response(JSON.stringify({ error: err.message, code: "org_access" }), {
+            status: 403,
+            headers: { "Content-Type": "application/json" },
+        });
+    }
+    return new Response(JSON.stringify({ error: String(err) }), {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+    });
 }
