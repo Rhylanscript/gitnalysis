@@ -1,6 +1,6 @@
 import { Env } from "../types";
 
-interface Repo {
+export interface Repo {
     name: string;
     full_name: string;
     fork: boolean;
