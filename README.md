@@ -78,6 +78,12 @@ Update the `id`s in `wrangler.toml` to match, then run the Worker locally:
 npx wrangler dev
 ```
 
+Run the worker tests with:
+
+```bash
+npm test
+```
+
 > **Windows/PowerShell users:** if you change any cached routes response shape during development, clear the local kv before restarting `wrangler dev`, or you might get stale data:
 >
 > ```powershell
@@ -112,7 +118,7 @@ Signing in also requests `read:org`, which unlocks two org features on your own 
 - **Org repos in your language stats** - org repos you've actually committed to in the period are included alongside your own (repos you never touch are left out so they don't skew the breakdown).
 - **Org leaderboards** - for any organisation you're a member of, a ranked list of members by commits, PRs, reviews and issues, plus org totals and most active repos.
 
-If you signed in before `read:org` was added, sign out and back in to grant it. Orgs that restrict third-party OAuth apps need an owner to approve the app before their private data shows up.
+If you signed in before `read:org` was added, sign out and back in to grant it. Orgs that restrict third-party OAuth apps need an owner to approve the app before their private data shows up. Signing in again won't fix this, so the leaderboard shows a message explaining that an org owner needs to approve Gitnalysis (members can request approval from their GitHub settings).
 
 Signing in never affects what anyone else sees when they look up your username, and your own token is never used to view anyone else's private data.
 

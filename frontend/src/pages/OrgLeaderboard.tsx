@@ -9,7 +9,12 @@ import SignInButton from "../components/SignInButton";
 import StatCard from "../components/StatCard";
 import { StatCardSkeleton } from "../components/Skeletons";
 
-type SortKey = "total" | "commits" | "pullRequests" | "reviews" | "issues";
+const ORG_APPROVAL_DOCS =
+    "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/approving-oauth-apps-for-your-organization";
+const REQUEST_APPROVAL_DOCS =
+    "https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-your-membership-in-organizations/requesting-organization-approval-for-oauth-apps";
+
+type SortKey ="total" | "commits" | "pullRequests" | "reviews" | "issues";
 
 const COLUMNS: { key: SortKey; label: string; className?: string }[] = [
     { key: "total", label: "Total" },
@@ -40,6 +45,7 @@ export default function OrgLeaderboard() {
     }, [data, org]);
 
     const missingScope = error instanceof ApiError && error.code === "missing_scope";
+    const orgRestricted = error instanceof ApiError && error.code === "org_oauth_restricted";
 
     const sorted = data
         ? [...data.members].sort((a, b) => b[sortKey] - a[sortKey] || b.total - a.total || a.login.localeCompare(b.login))
@@ -82,7 +88,39 @@ export default function OrgLeaderboard() {
                     </div>
                 )}
 
-                {error && !missingScope && <p className="text-red-400">{error.message}</p>}
+                {orgRestricted && (
+                    <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 text-sm text-neutral-400">
+                        <p className="font-medium text-neutral-100">@{org} hasn't approved Gitnalysis yet</p>
+                        <p className="mt-2">
+                            This organisation restricts access by third-party apps, so GitHub won't share its data until an
+                            organisation owner approves Gitnalysis. Signing in again won't change this.
+                        </p>
+                        <p className="mt-2">
+                            If you're an owner, you can approve it in the organisation's settings. Otherwise, you can ask an
+                            owner to approve it from GitHub.
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-4">
+                            <a
+                                href={ORG_APPROVAL_DOCS}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-medium text-emerald-400 hover:text-emerald-300"
+                            >
+                                How owners approve apps
+                            </a>
+                            <a
+                                href={REQUEST_APPROVAL_DOCS}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-medium text-emerald-400 hover:text-emerald-300"
+                            >
+                                How to request approval
+                            </a>
+                        </div>
+                    </div>
+                )}
+
+                {error && !missingScope && !orgRestricted && <p className="text-red-400">{error.message}</p>}
 
                 {isOwnProfile && isLoading && (
                     <>

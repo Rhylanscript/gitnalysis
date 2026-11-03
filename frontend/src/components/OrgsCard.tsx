@@ -18,6 +18,7 @@ export default function OrgsCard({ username }: Props) {
     });
 
     const missingScope = error instanceof ApiError && error.code === "missing_scope";
+    const orgRestricted = error instanceof ApiError && error.code === "org_oauth_restricted";
 
     return (
         <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
@@ -43,7 +44,13 @@ export default function OrgsCard({ username }: Props) {
                 </div>
             )}
 
-            {error && !missingScope && <p className="text-xs text-red-400">{error.message}</p>}
+            {orgRestricted && (
+                <p className="text-xs text-neutral-500">
+                    An organisation restricts third-party apps, so an owner needs to approve Gitnalysis first.
+                </p>
+            )}
+
+            {error && !missingScope && !orgRestricted && <p className="text-xs text-red-400">{error.message}</p>}
 
             {data && data.orgs.length === 0 && (
                 <p className="text-xs text-neutral-500">

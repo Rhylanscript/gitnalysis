@@ -7,7 +7,8 @@ import { getCached, setCached } from "./cache";
 import { OAUTH_STATE_COOKIE_NAME, SESSION_TTL_SECONDS } from "./config";
 import { corsHeadersFor, handlePreflight } from "./cors";
 import { fetchContributedNotOwnedCount, fetchContributions } from "./github/graphql";
-import { fetchOrgLeaderboard, fetchViewerOrgs, MissingScopeError, OrgAccessError } from "./github/orgs";
+import { orgErrorResponse } from "./github/orgErrors";
+import { fetchOrgLeaderboard, fetchViewerOrgs } from "./github/orgs";
 import { calculateAchievements } from "./stats/achievements";
 import { calculateDayOfWeekSplit } from "./stats/dayOfWeek";
 import { getLanguageStats } from "./stats/getLanguageStats";
@@ -430,25 +431,6 @@ async function getSessionFromRequest(request: Request, env: Env) {
 function signInRequired(): Response {
     return new Response(JSON.stringify({ error: "Sign in to view your organisations", code: "sign_in_required" }), {
         status: 401,
-        headers: { "Content-Type": "application/json" },
-    });
-}
-
-function orgErrorResponse(err: unknown): Response {
-    if (err instanceof MissingScopeError) {
-        return new Response(JSON.stringify({ error: err.message, code: "missing_scope" }), {
-            status: 403,
-            headers: { "Content-Type": "application/json" },
-        });
-    }
-    if (err instanceof OrgAccessError) {
-        return new Response(JSON.stringify({ error: err.message, code: "org_access" }), {
-            status: 403,
-            headers: { "Content-Type": "application/json" },
-        });
-    }
-    return new Response(JSON.stringify({ error: String(err) }), {
-        status: 502,
         headers: { "Content-Type": "application/json" },
     });
 }

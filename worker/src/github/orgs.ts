@@ -8,11 +8,41 @@ export class MissingScopeError extends Error {
 
 export class OrgAccessError extends Error {}
 
+// the org has OAuth App access restrictions on and hasn't approved gitnalysis,
+// signing in again or asking for more scopes won't fix this, an org owner has to approve the app
+export class OrgRestrictedError extends Error {
+    org?: string;
+
+    constructor(org?: string) {
+        super(
+            `${org ?? "This organisation"} restricts access by third-party apps, so an organisation owner needs to approve Gitnalysis before its data can be shown`,
+        );
+        this.org = org;
+    }
+}
+
+export function isOAuthRestrictionError(error: any): boolean {
+    if (error?.type !== "FORBIDDEN") return false;
+    const message = String(error.message ?? "");
+    return /OAuth App access restrictions/i.test(message) || /forbids access via a third-party application/i.test(message);
+}
+
 // small pages, capped to stay under the 50 subrequest limit
 const MEMBERS_PER_PAGE = 25;
 const MAX_MEMBER_PAGES = 8;
 
-async function orgGraphQL(query: string, variables: Record<string, unknown>, token: string): Promise<any> {
+interface OrgGraphQLOptions {
+    // return whatever data came back when the only errors are from restricted orgs,
+    // used for the viewer's org list so one restricted org doesn't hide the rest
+    tolerateRestricted?: boolean;
+}
+
+async function orgGraphQL(
+    query: string,
+    variables: Record<string, unknown>,
+    token: string,
+    options: OrgGraphQLOptions = {},
+): Promise<any> {
     const response = await fetch("https://api.github.com/graphql", {
         method: "POST",
         headers: {
@@ -40,6 +70,13 @@ async function orgGraphQL(query: string, variables: Record<string, unknown>, tok
 
     if (json.errors?.some((e: any) => e.type === "INSUFFICIENT_SCOPES")) {
         throw new MissingScopeError();
+    }
+    if (json.errors?.some(isOAuthRestrictionError)) {
+        if (options.tolerateRestricted && json.data && json.errors.every(isOAuthRestrictionError)) {
+            return json.data;
+        }
+        const org = typeof variables.org === "string" ? variables.org : undefined;
+        throw new OrgRestrictedError(org);
     }
     if (json.errors) {
         throw new Error(`GraphQL query errors: ${JSON.stringify(json.errors)}`);
@@ -69,8 +106,8 @@ const VIEWER_ORGS_QUERY = `
 `;
 
 export async function fetchViewerOrgs(token: string): Promise<OrgSummary[]> {
-    const data = await orgGraphQL(VIEWER_ORGS_QUERY, {}, token);
-    return data.viewer.organizations.nodes.filter(Boolean);
+    const data = await orgGraphQL(VIEWER_ORGS_QUERY, {}, token, { tolerateRestricted: true });
+    return (data?.viewer?.organizations?.nodes ?? []).filter(Boolean);
 }
 
 const ORG_INFO_QUERY = `
