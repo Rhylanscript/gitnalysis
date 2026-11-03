@@ -4,15 +4,17 @@ import { CalendarDays, CalendarRange, Sparkles, ChevronRight } from "lucide-reac
 import type { GitHubUser, Achievement } from "../lib/api";
 import AchievementBadge from "./AchievementBadge";
 import Modal from "./Modal";
+import OrgsCard from "./OrgsCard";
 
 interface Props {
   user: GitHubUser;
   achievements?: Achievement[];
+  showOrgs?: boolean;
 }
 
 const VISIBLE_UNLOCKED = 5;
 
-export default function Sidebar({ user, achievements }: Props) {
+export default function Sidebar({ user, achievements, showOrgs }: Props) {
     const [showAllModal, setShowAllModal] = useState(false);
 
     const unlocked = achievements?.filter((a) => a.unlocked) ?? [];
@@ -72,6 +74,8 @@ export default function Sidebar({ user, achievements }: Props) {
                     </Link>
                 </div>
             </div>
+
+            {showOrgs && <OrgsCard username={user.login} />}
 
             {achievements && (
                 <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">

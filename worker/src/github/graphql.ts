@@ -1,3 +1,6 @@
+import { isOAuthRestrictionError } from "./orgs";
+import type { Repo } from "./rest";
+
 const CONTRIBUTIONS_QUERY = `
     query($username: String!, $from: DateTime!, $to: DateTime!) {
         user(login: $username) {
@@ -61,6 +64,100 @@ export async function fetchContributions(
     }
 
     return json.data.user.contributionsCollection;
+}
+
+async function githubGraphQL<T>(query: string, variables: Record<string, unknown>, token: string): Promise<T> {
+    const response = await fetch("https://api.github.com/graphql", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "gitnalysis",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ query, variables }),
+    });
+
+    if (!response.ok) {
+        throw new Error(`GitHub GraphQL error: ${response.status}`);
+    }
+
+    const json: any = await response.json();
+
+    if (json.errors) {
+        throw new Error(`GraphQL query errors: ${JSON.stringify(json.errors)}`);
+    }
+
+    return json.data;
+}
+
+const CONTRIBUTED_ORG_REPOS_QUERY = `
+    query($username: String!, $from: DateTime!, $to: DateTime!) {
+        user(login: $username) {
+            contributionsCollection(from: $from, to: $to) {
+                commitContributionsByRepository(maxRepositories: 100) {
+                    repository {
+                        name
+                        nameWithOwner
+                        isFork
+                        pushedAt
+                        owner {
+                            __typename
+                        }
+                    }
+                }
+            }
+        }
+    }
+`;
+
+export interface ContributedOrgRepos {
+    repos: Repo[];
+    // some repos were hidden because their org restricts third-party apps
+    restricted: boolean;
+}
+
+// org repos the user has committed to, range has to be <= 1 year
+export async function fetchContributedOrgRepos(
+    username: string,
+    from: string,
+    to: string,
+    token: string,
+): Promise<ContributedOrgRepos> {
+    const response = await fetch("https://api.github.com/graphql", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "gitnalysis",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ query: CONTRIBUTED_ORG_REPOS_QUERY, variables: { username, from, to } }),
+    });
+
+    if (!response.ok) {
+        throw new Error(`GitHub GraphQL error: ${response.status}`);
+    }
+
+    const json: any = await response.json();
+
+    // restricted orgs come back as errors next to the repos we can see, keep the visible ones
+    const restricted = !!json.errors?.length && json.errors.every(isOAuthRestrictionError);
+    if (json.errors && !restricted) {
+        throw new Error(`GraphQL query errors: ${JSON.stringify(json.errors)}`);
+    }
+
+    const contributions = json.data?.user?.contributionsCollection?.commitContributionsByRepository ?? [];
+
+    const repos = contributions
+        .map((c: any) => c?.repository)
+        .filter((r: any) => r && r.owner?.__typename === "Organization")
+        .map((r: any) => ({
+            name: r.name,
+            full_name: r.nameWithOwner,
+            fork: r.isFork,
+            pushed_at: r.pushedAt,
+        }));
+
+    return { repos, restricted };
 }
 
 const CONTRIBUTED_REPOS_QUERY = `

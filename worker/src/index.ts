@@ -7,6 +7,8 @@ import { getCached, setCached } from "./cache";
 import { OAUTH_STATE_COOKIE_NAME, SESSION_TTL_SECONDS } from "./config";
 import { corsHeadersFor, handlePreflight } from "./cors";
 import { fetchContributedNotOwnedCount, fetchContributions } from "./github/graphql";
+import { orgErrorResponse } from "./github/orgErrors";
+import { fetchOrgLeaderboard, fetchViewerOrgs } from "./github/orgs";
 import { calculateAchievements } from "./stats/achievements";
 import { calculateDayOfWeekSplit } from "./stats/dayOfWeek";
 import { getLanguageStats } from "./stats/getLanguageStats";
@@ -138,7 +140,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             const stats = await getLanguageStats(username, token, isOwnPrivateData, from);
             const result = { ...stats, estimate: true, period: periodParam ?? "all" };
 
-            await setCached(env, cacheKey, result);
+            // don't cache a temporary org repo failure, try again on the next request
+            if (stats.orgReposStatus !== "unavailable") await setCached(env, cacheKey, result);
             return new Response(JSON.stringify(result), {
                 headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
             });
@@ -209,7 +212,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
             const result = { achievements, basedOnPeriod: "1yr" as const };
 
-            await setCached(env, cacheKey, result);
+            if (languageStats.orgReposStatus !== "unavailable") await setCached(env, cacheKey, result);
 
             return new Response(JSON.stringify(result), {
                 headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
@@ -283,6 +286,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
                 ...streaks, 
                 records, 
                 languages: languageStats.languages,
+                ...(languageStats.warning ? { languagesWarning: languageStats.warning } : {}),
                 previous,
                 recapType: type, 
                 from,
@@ -290,7 +294,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
                 isOwnPrivateData,
             };
 
-            await setCached(env, cacheKey, result);
+            if (languageStats.orgReposStatus !== "unavailable") await setCached(env, cacheKey, result);
             return new Response(JSON.stringify(result), {
                 headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
             });
@@ -299,6 +303,57 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
                 status: 502,
                 headers: { "Content-Type": "application/json" },
             });
+        }
+    }
+
+    if (url.pathname === "/api/orgs") {
+        const session = await getSessionFromRequest(request, env);
+        if (!session) return signInRequired();
+
+        try {
+            const orgs = await fetchViewerOrgs(session.accessToken);
+            return new Response(JSON.stringify({ orgs }), {
+                headers: { "Content-Type": "application/json" },
+            });
+        } catch (err) {
+            return orgErrorResponse(err);
+        }
+    }
+
+    if (url.pathname === "/api/org/leaderboard") {
+        const org = url.searchParams.get("org");
+        const period = (url.searchParams.get("period") ?? "30d") as Period;
+
+        if (!org) {
+            return new Response(JSON.stringify({ error: "org required" }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            });
+        }
+
+        const session = await getSessionFromRequest(request, env);
+        if (!session) return signInRequired();
+
+        // per viewer, since results depend on their access
+        const cacheKey = `org:${org.toLowerCase()}:${period}:${session.username.toLowerCase()}`;
+        const cached = await getCached<any>(env, cacheKey);
+        if (cached) {
+            return new Response(JSON.stringify(cached), {
+                headers: { "Content-Type": "application/json", "X-Cache": "HIT" },
+            });
+        }
+
+        try {
+            const { from, to } = periodToRange(period);
+            const leaderboard = await fetchOrgLeaderboard(org, from, to, session.accessToken);
+            const result = { ...leaderboard, period, from, to };
+
+            await setCached(env, cacheKey, result);
+            return new Response(JSON.stringify(result), {
+                headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
+            });
+        } catch (err) {
+            return orgErrorResponse(err);
         }
     }
 
@@ -368,4 +423,16 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     }
 
     return new Response("Not found", { status: 404 });
+}
+
+async function getSessionFromRequest(request: Request, env: Env) {
+    const sessionId = getBearerToken(request);
+    return sessionId ? await getSession(env, sessionId) : null;
+}
+
+function signInRequired(): Response {
+    return new Response(JSON.stringify({ error: "Sign in to view your organisations", code: "sign_in_required" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+    });
 }

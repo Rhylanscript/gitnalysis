@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Recap from "./pages/Recap";
+import OrgLeaderboard from "./pages/OrgLeaderboard";
 
 export default function App() {
 	return (
@@ -10,6 +11,7 @@ export default function App() {
 			<Route path="/:username" element={<Dashboard />} />
 			<Route path="/:username/recap/:type" element={<Recap />} />
 			<Route path="/:username/recap/:type/:year" element={<Recap />} />
+			<Route path="/:username/orgs/:org" element={<OrgLeaderboard />} />
 		</Routes>
 	)
 }
