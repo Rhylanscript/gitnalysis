@@ -145,6 +145,7 @@ export default function Dashboard() {
                                         reposAnalysed={languageStats.reposAnalysed}
                                         totalRepos={languageStats.totalRepos}
                                         period={period}
+                                        warning={languageStats.warning}
                                     />
                                 </div>
                             )

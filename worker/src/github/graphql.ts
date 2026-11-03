@@ -1,3 +1,4 @@
+import { isOAuthRestrictionError } from "./orgs";
 import type { Repo } from "./rest";
 
 const CONTRIBUTIONS_QUERY = `
@@ -109,24 +110,54 @@ const CONTRIBUTED_ORG_REPOS_QUERY = `
     }
 `;
 
+export interface ContributedOrgRepos {
+    repos: Repo[];
+    // some repos were hidden because their org restricts third-party apps
+    restricted: boolean;
+}
+
 // org repos the user has committed to, range has to be <= 1 year
 export async function fetchContributedOrgRepos(
     username: string,
     from: string,
     to: string,
     token: string,
-): Promise<Repo[]> {
-    const data = await githubGraphQL<any>(CONTRIBUTED_ORG_REPOS_QUERY, { username, from, to }, token);
+): Promise<ContributedOrgRepos> {
+    const response = await fetch("https://api.github.com/graphql", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "gitnalysis",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ query: CONTRIBUTED_ORG_REPOS_QUERY, variables: { username, from, to } }),
+    });
 
-    return data.user.contributionsCollection.commitContributionsByRepository
-        .map((c: any) => c.repository)
-        .filter((r: any) => r.owner.__typename === "Organization")
+    if (!response.ok) {
+        throw new Error(`GitHub GraphQL error: ${response.status}`);
+    }
+
+    const json: any = await response.json();
+
+    // restricted orgs come back as errors next to the repos we can see, keep the visible ones
+    const restricted = !!json.errors?.length && json.errors.every(isOAuthRestrictionError);
+    if (json.errors && !restricted) {
+        throw new Error(`GraphQL query errors: ${JSON.stringify(json.errors)}`);
+    }
+
+    const contributions = json.data?.user?.contributionsCollection?.commitContributionsByRepository ?? [];
+
+    const repos = contributions
+        .map((c: any) => c?.repository)
+        .filter((r: any) => r && r.owner?.__typename === "Organization")
         .map((r: any) => ({
             name: r.name,
             full_name: r.nameWithOwner,
             fork: r.isFork,
             pushed_at: r.pushedAt,
         }));
+
+    return { repos, restricted };
 }
 
 const CONTRIBUTED_REPOS_QUERY = `

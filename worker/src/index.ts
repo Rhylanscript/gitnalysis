@@ -140,7 +140,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             const stats = await getLanguageStats(username, token, isOwnPrivateData, from);
             const result = { ...stats, estimate: true, period: periodParam ?? "all" };
 
-            await setCached(env, cacheKey, result);
+            // don't cache a temporary org repo failure, try again on the next request
+            if (stats.orgReposStatus !== "unavailable") await setCached(env, cacheKey, result);
             return new Response(JSON.stringify(result), {
                 headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
             });
@@ -211,7 +212,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
             const result = { achievements, basedOnPeriod: "1yr" as const };
 
-            await setCached(env, cacheKey, result);
+            if (languageStats.orgReposStatus !== "unavailable") await setCached(env, cacheKey, result);
 
             return new Response(JSON.stringify(result), {
                 headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
@@ -285,6 +286,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
                 ...streaks, 
                 records, 
                 languages: languageStats.languages,
+                ...(languageStats.warning ? { languagesWarning: languageStats.warning } : {}),
                 previous,
                 recapType: type, 
                 from,
@@ -292,7 +294,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
                 isOwnPrivateData,
             };
 
-            await setCached(env, cacheKey, result);
+            if (languageStats.orgReposStatus !== "unavailable") await setCached(env, cacheKey, result);
             return new Response(JSON.stringify(result), {
                 headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
             });

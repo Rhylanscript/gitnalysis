@@ -210,6 +210,7 @@ export default function Recap() {
                                     reposAnalysed={data.languages.length}
                                     totalRepos={data.languages.length}
                                     period="all"
+                                    warning={data.languagesWarning}
                                 />
                             </div>
                         )}

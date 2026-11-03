@@ -12,6 +12,7 @@ interface Props {
     reposAnalysed: number;
     totalRepos: number;
     period: string;
+    warning?: string;
 }
 
 const OTHER_THRESHOLD = 0.5;
@@ -30,12 +31,13 @@ function groupSmallLanguages(languages: Language[]) {
     };
 }
 
-export default function LanguageChart({ languages, reposAnalysed, totalRepos, period }: Props) {
+export default function LanguageChart({ languages, reposAnalysed, totalRepos, period, warning }: Props) {
     if (languages.length === 0) {
         return (
             <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
                 <h2 className="mb-2 text-sm font-medium text-neutral-400">Top Languages</h2>
                 <p className="text-sm text-neutral-500">No repository activity in this period.</p>
+                {warning && <p className="mt-2 text-xs text-amber-400/80">{warning}.</p>}
             </div>
         );
     }
@@ -133,6 +135,8 @@ export default function LanguageChart({ languages, reposAnalysed, totalRepos, pe
                     {period !== "all" ? " active in this period" : ""}.
                 </p>
             )}
+
+            {warning && <p className="mt-2 text-xs text-amber-400/80">{warning}.</p>}
         </div>
     );
 }

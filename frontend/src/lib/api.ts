@@ -80,6 +80,8 @@ export interface LanguageStats {
     byRepo: { repo: string; languages: { name: string; percentage: number }[] }[];
     reposAnalysed: number;
     totalRepos: number;
+    orgReposStatus: "included" | "partial" | "unavailable" | "not_requested";
+    warning?: string;
     estimate: true;
     period: Period | "all";
 }
@@ -111,6 +113,7 @@ export interface Recap extends Stats {
     from: string;
     to: string;
     languages: { name: string; bytes: number; percentage: number }[];
+    languagesWarning?: string;
     previous: RecapComparisonMetrics;
 }
 
